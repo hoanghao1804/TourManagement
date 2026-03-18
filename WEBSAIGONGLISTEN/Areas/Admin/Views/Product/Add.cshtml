@@ -1,0 +1,457 @@
+﻿@model WEBSAIGONGLISTEN.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Thêm gói du lịch";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<!-- Load Leaflet.js CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+    .form-section {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    .form-section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        font-weight: 500;
+        color: #495057;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+    
+    <form asp-action="Add" method="post" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Cột trái -->
+            <div class="col-md-6">
+                <!-- Thông tin cơ bản -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-info-circle"></i> Thông tin cơ bản
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Name">Tên sản phẩm</label>
+                        <input asp-for="Name" class="form-control" required />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CategoryId">Khu vực</label>
+                        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control" required>
+                            <option value="">-- Chọn khu vực --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imageUrl">Hình ảnh sản phẩm</label>
+                        <input type="file" name="imageUrl" class="form-control" id="imageInput" onchange="previewImage()" />
+                        <div id="imagePreview" class="mt-2" style="max-width:200px;"></div>
+                    </div>
+                </div>
+
+                <!-- Thông tin giá -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-tags"></i> Giá tour
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="PriceUnder2">Giá cho trẻ dưới 2 tuổi</label>
+                        <input asp-for="PriceUnder2" type="number" step="1000" min="100000" max="5000000" class="form-control" required />
+                        <span asp-validation-for="PriceUnder2" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Price2To10">Giá cho trẻ từ 2 đến 10 tuổi</label>
+                        <input asp-for="Price2To10" type="number" step="1000" min="200000" max="10000000" class="form-control" required />
+                        <span asp-validation-for="Price2To10" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="PriceAbove10">Giá cho người trên 10 tuổi</label>
+                        <input asp-for="PriceAbove10" type="number" step="1000" min="500000" max="20000000" class="form-control" required />
+                        <span asp-validation-for="PriceAbove10" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải -->
+            <div class="col-md-6">
+                <!-- Thông tin lịch trình -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-calendar-alt"></i> Lịch trình
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Quantity">Số lượng sản phẩm</label>
+                        <input asp-for="Quantity" type="number" min="1" max="10000" class="form-control" required />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="StartDate">Ngày bắt đầu tour</label>
+                        <input asp-for="StartDate" type="date" class="form-control" required min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EndDate">Ngày kết thúc tour</label>
+                        <input asp-for="EndDate" type="date" class="form-control" required min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Vị trí địa điểm -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-map-marker-alt"></i> Vị trí địa điểm
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tỉnh/Thành phố</label>
+                        <select class="form-control" id="provinceSelect">
+                            <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phường/Xã</label>
+                        <select class="form-control" id="wardSelect">
+                            <option value="">-- Chọn Phường/Xã --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Address">Địa chỉ chi tiết</label>
+                        <input asp-for="Address" class="form-control" id="address" placeholder="Nhập địa chỉ chi tiết hoặc chọn trên bản đồ" />
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="City">Phường/Xã (tự động)</label>
+                                <input asp-for="City" class="form-control" id="city" placeholder="Phường/Xã" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Province">Tỉnh/Thành (tự động)</label>
+                                <input asp-for="Province" class="form-control" id="province" placeholder="Tỉnh/Thành" readonly />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Latitude">Vĩ độ</label>
+                                <input asp-for="Latitude" type="number" step="0.000001" class="form-control" id="latitude" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Longitude">Kinh độ</label>
+                                <input asp-for="Longitude" type="number" step="0.000001" class="form-control" id="longitude" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="map" style="height: 300px; width: 100%; border: 1px solid #ddd; border-radius: 5px;"></div>
+                    <small class="form-text text-muted mt-2">
+                        <i class="fas fa-info-circle"></i> Chọn Tỉnh/Thành → Phường/Xã → Click bản đồ để chọn tọa độ
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save me-2"></i>Thêm sản phẩm
+            </button>
+            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times me-2"></i>Hủy
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function previewImage() {
+        var input = document.getElementById("imageInput");
+        var preview = document.getElementById("imagePreview");
+
+        preview.innerHTML = ""; // Clear any previous content
+
+        var file = input.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = document.createElement("img");
+                img.src = e.target.result;
+                img.style.maxWidth = "100%";
+                img.style.borderRadius = "5px";
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Leaflet.js Location Picker (OpenStreetMap - Miễn phí!)
+    var map, marker;
+    var provinces = [];
+    var selectedProvince = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load danh sách tỉnh/thành
+        loadProvinces();
+        
+        // Khởi tạo bản đồ với tâm mặc định (Hà Nội)
+        map = L.map('map').setView([21.0285, 105.8542], 13);
+
+        // Thêm tile layer từ OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Tạo marker có thể kéo
+        marker = L.marker([21.0285, 105.8542], { draggable: true }).addTo(map);
+
+        // Sự kiện click trên bản đồ
+        map.on('click', function(e) {
+            placeMarkerAndGetAddress(e.latlng);
+        });
+
+        // Sự kiện kéo marker
+        marker.on('dragend', function(e) {
+            placeMarkerAndGetAddress(e.target.getLatLng());
+        });
+
+        // Geocode khi nhập địa chỉ sử dụng Nominatim (miễn phí)
+        var addressInput = document.getElementById('address');
+        addressInput.addEventListener('change', function() {
+            geocodeAddress();
+        });
+        
+        // Load danh sách phường/xã khi chọn tỉnh/thành
+        var provinceSelect = document.getElementById('provinceSelect');
+        var wardSelect = document.getElementById('wardSelect');
+        
+        provinceSelect.addEventListener('change', function() {
+            var provinceCode = this.value;
+            selectedProvince = provinces.find(p => p.code === provinceCode);
+            
+            // Reset ward select
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+            
+            if (provinceCode) {
+                loadWards(provinceCode);
+                updateProvinceField();
+            } else {
+                document.getElementById('province').value = '';
+                document.getElementById('city').value = '';
+            }
+        });
+        
+        wardSelect.addEventListener('change', function() {
+            if (this.value) {
+                updateWardField();
+                // Geocode để tìm vị trí trên bản đồ
+                geocodeWardOnMap();
+            }
+        });
+    });
+    
+    // Load danh sách tỉnh/thành từ API
+    function loadProvinces() {
+        fetch('https://www.tinhthanhpho.com/api/v1/new-provinces?limit=34')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    provinces = data.data;
+                    var select = document.getElementById('provinceSelect');
+                    provinces.forEach(province => {
+                        var option = document.createElement('option');
+                        option.value = province.code;
+                        option.textContent = province.name;
+                        option.setAttribute('data-code', province.code);
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading provinces:', error);
+                alert('Không thể tải danh sách tỉnh/thành. Vui lòng tải lại trang.');
+            });
+    }
+    
+    function loadWards(provinceCode) {
+        fetch(`https://www.tinhthanhpho.com/api/v1/new-provinces/${provinceCode}/wards?limit=200`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    var select = document.getElementById('wardSelect');
+                    data.data.forEach(ward => {
+                        var option = document.createElement('option');
+                        option.value = ward.name;
+                        option.textContent = ward.name + ' (' + ward.type + ')';
+                        option.setAttribute('data-type', ward.type);
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading wards:', error);
+                alert('Không thể tải danh sách phường/xã. Vui lòng thử lại.');
+            });
+    }
+    
+    function updateProvinceField() {
+        if (selectedProvince) {
+            document.getElementById('province').value = selectedProvince.name + ' (' + selectedProvince.type + ')';
+        }
+    }
+    
+    function updateWardField() {
+        var wardSelect = document.getElementById('wardSelect');
+        var selectedOption = wardSelect.options[wardSelect.selectedIndex];
+        if (selectedOption) {
+            var wardName = selectedOption.value;
+            var provinceName = selectedProvince ? selectedProvince.name : '';
+            document.getElementById('city').value = wardName;
+            
+            // Update address field với địa chỉ mẫu
+            var addressDetail = document.getElementById('address').value || '';
+            var fullAddress = addressDetail + ', ' + wardName + ', ' + provinceName;
+            document.getElementById('address').value = fullAddress.trim().replace(/^,\s*/, '');
+        }
+    }
+    
+    function geocodeWardOnMap() {
+        var wardName = document.getElementById('wardSelect').value;
+        var provinceName = selectedProvince ? selectedProvince.name : '';
+        
+        if (wardName && provinceName) {
+            var searchQuery = wardName + ', ' + provinceName + ', Vietnam';
+            geocodeAddressToMap(searchQuery);
+        }
+    }
+    
+    function geocodeAddressToMap(address) {
+        var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=vn`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    var result = data[0];
+                    var latlng = L.latLng(parseFloat(result.lat), parseFloat(result.lon));
+                    
+                    map.setView(latlng, 15);
+                    placeMarkerAndGetAddress(latlng);
+                }
+            })
+            .catch(error => {
+                console.log('Geocoding error:', error);
+            });
+    }
+
+    function placeMarkerAndGetAddress(latlng) {
+        marker.setLatLng(latlng);
+        document.getElementById('latitude').value = latlng.lat.toFixed(6);
+        document.getElementById('longitude').value = latlng.lng.toFixed(6);
+        
+        // Reverse geocode để lấy địa chỉ
+        reverseGeocode(latlng);
+    }
+
+    function reverseGeocode(latlng) {
+        var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    document.getElementById('address').value = data.display_name;
+                    
+                    // Lấy thành phố và tỉnh từ address object
+                    if (data.address) {
+                        var address = data.address;
+                        if (address.city) {
+                            document.getElementById('city').value = address.city;
+                        } else if (address.town) {
+                            document.getElementById('city').value = address.town;
+                        } else if (address.village) {
+                            document.getElementById('city').value = address.village;
+                        }
+                        
+                        if (address.state) {
+                            document.getElementById('province').value = address.state;
+                        } else if (address.province) {
+                            document.getElementById('province').value = address.province;
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Geocoding error:', error);
+            });
+    }
+
+    function geocodeAddress() {
+        var address = document.getElementById('address').value;
+        if (!address) return;
+        
+        var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    var result = data[0];
+                    var latlng = L.latLng(parseFloat(result.lat), parseFloat(result.lon));
+                    
+                    map.setView(latlng, 15);
+                    placeMarkerAndGetAddress(latlng);
+                } else {
+                    alert('Không tìm thấy địa chỉ');
+                }
+            })
+            .catch(error => {
+                console.log('Geocoding error:', error);
+                alert('Lỗi khi tìm kiếm địa chỉ');
+            });
+    }
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <!-- Load Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+}

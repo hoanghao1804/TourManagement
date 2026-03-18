@@ -1,0 +1,451 @@
+﻿@{
+    ViewData["Title"] = "Ghi Hình Màn Hình";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <!-- Header Section -->
+            <div class="record-header text-center mb-5">
+                <div class="record-icon mb-3">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h2 class="record-title">@ViewData["Title"]</h2>
+                <p class="record-subtitle">Ghi lại màn hình của bạn một cách dễ dàng và nhanh chóng</p>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="record-card">
+                <div class="card-body">
+                    <!-- Control Section -->
+                    <div class="control-section text-center mb-4">
+                        <div class="record-status mb-3">
+                            <div class="status-indicator" id="statusIndicator">
+                                <i class="fas fa-circle"></i>
+                                <span id="statusText">Sẵn sàng ghi hình</span>
+                            </div>
+                        </div>
+                        
+                        <button class="record-btn" id="recordBtn">
+                            <i class="fas fa-play me-2"></i>
+                            <span class="btn-text">Bắt đầu ghi hình</span>
+                        </button>
+                        
+                        <div class="record-info mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Video sẽ được tải xuống tự động sau khi ghi xong
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Video Preview Section -->
+                    <div class="video-section">
+                        <div class="video-container">
+                            <video id="videoPreview" controls style="display: none;">
+                                <source src="" type="video/webm">
+                                Trình duyệt của bạn không hỗ trợ video.
+                            </video>
+                            
+                            <div class="video-placeholder" id="videoPlaceholder">
+                                <div class="placeholder-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <p class="placeholder-text">Video sẽ xuất hiện ở đây sau khi ghi hình</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS -->
+<style>
+    /* Record Header */
+    .record-header {
+        margin-bottom: 2rem;
+    }
+
+    .record-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+    }
+
+    .record-icon i {
+        font-size: 2rem;
+        color: #ecf0f1;
+    }
+
+    .record-title {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .record-subtitle {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin: 0;
+    }
+
+    /* Record Card */
+    .record-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,249,250,0.9));
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+    }
+
+    .record-card .card-body {
+        padding: 3rem;
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .status-indicator.recording {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator i {
+        font-size: 0.8rem;
+    }
+
+    /* Record Button */
+    .record-btn {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+        position: relative;
+        overflow: hidden;
+        min-width: 200px;
+    }
+
+    .record-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .record-btn:hover::before {
+        left: 100%;
+    }
+
+    .record-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 12px 35px rgba(44, 62, 80, 0.4);
+    }
+
+    .record-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    .record-btn:disabled {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+    }
+
+    .record-btn.recording {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        animation: pulse 2s infinite;
+    }
+
+    .record-btn.recording .btn-text::after {
+        content: '...';
+        animation: dots 1.5s infinite;
+    }
+
+    /* Video Section */
+    .video-section {
+        margin-top: 2rem;
+    }
+
+    .video-container {
+        position: relative;
+        background: #f8f9fa;
+        border-radius: 15px;
+        overflow: hidden;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .video-container video {
+        width: 100%;
+        max-height: 500px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .video-placeholder {
+        text-align: center;
+        color: #7f8c8d;
+        padding: 3rem;
+    }
+
+    .placeholder-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .placeholder-text {
+        font-size: 1.1rem;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .record-info {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    /* Animations */
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+        }
+    }
+
+    @@keyframes dots {
+        0%, 20% {
+            color: transparent;
+        }
+        50% {
+            color: white;
+        }
+        100% {
+            color: transparent;
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .record-card .card-body {
+            padding: 2rem 1.5rem;
+        }
+        
+        .record-title {
+            font-size: 2rem;
+        }
+        
+        .record-btn {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const recordBtn = document.getElementById("recordBtn");
+        const videoPreview = document.getElementById("videoPreview");
+        const videoPlaceholder = document.getElementById("videoPlaceholder");
+        const statusIndicator = document.getElementById("statusIndicator");
+        const statusText = document.getElementById("statusText");
+        const btnText = recordBtn.querySelector(".btn-text");
+
+        if (!recordBtn || !videoPreview) {
+            console.error("Không tìm thấy các element cần thiết trong DOM.");
+            return;
+        }
+
+        let mediaRecorder = null;
+        let chunks = [];
+        let isRecording = false;
+
+        recordBtn.addEventListener("click", async function () {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                // Yêu cầu quyền truy cập màn hình
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        mediaSource: 'screen',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: true
+                });
+
+                // Kiểm tra định dạng video được hỗ trợ
+                const mimeType = MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
+                    ? "video/webm; codecs=vp9"
+                    : MediaRecorder.isTypeSupported("video/webm")
+                    ? "video/webm"
+                    : "video/mp4";
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+                chunks = [];
+
+                // Cập nhật giao diện
+                updateUI(true);
+
+                mediaRecorder.addEventListener("dataavailable", function (e) {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                });
+
+                mediaRecorder.addEventListener("stop", function () {
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+
+                    // Hiển thị video
+                    videoPreview.src = url;
+                    videoPreview.style.display = "block";
+                    videoPlaceholder.style.display = "none";
+
+                    // Tự động tải xuống
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `ghi-hinh-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${mimeType.split('/')[1]}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    // Cập nhật giao diện
+                    updateUI(false);
+
+                    // Dừng stream
+                    stream.getTracks().forEach(track => track.stop());
+                });
+
+                // Bắt đầu ghi hình
+                mediaRecorder.start(1000); // Ghi dữ liệu mỗi giây
+                isRecording = true;
+
+            } catch (error) {
+                console.error("Lỗi trong quá trình ghi hình:", error);
+                
+                // Hiển thị thông báo lỗi đẹp hơn
+                showNotification("Ghi hình thất bại", "Vui lòng kiểm tra quyền truy cập và thử lại.", "error");
+                updateUI(false);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        }
+
+        function updateUI(recording) {
+            if (recording) {
+                // Đang ghi hình
+                recordBtn.classList.add("recording");
+                recordBtn.disabled = true;
+                btnText.textContent = "Đang ghi hình";
+                
+                statusIndicator.classList.add("recording");
+                statusText.textContent = "Đang ghi hình...";
+            } else {
+                // Dừng ghi hình
+                recordBtn.classList.remove("recording");
+                recordBtn.disabled = false;
+                btnText.textContent = "Bắt đầu ghi hình";
+                
+                statusIndicator.classList.remove("recording");
+                statusText.textContent = "Sẵn sàng ghi hình";
+            }
+        }
+
+        function showNotification(title, message, type = "info") {
+            // Tạo thông báo đẹp
+            const notification = document.createElement("div");
+            notification.className = `alert alert-${type === "error" ? "danger" : "info"} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            
+            notification.innerHTML = `
+                <strong>${title}</strong><br>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Tự động ẩn sau 5 giây
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Xử lý khi người dùng đóng cửa sổ chia sẻ màn hình
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isRecording) {
+                stopRecording();
+            }
+        });
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

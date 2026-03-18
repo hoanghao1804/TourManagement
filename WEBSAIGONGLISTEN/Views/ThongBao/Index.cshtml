@@ -1,0 +1,282 @@
+﻿@model IEnumerable<WEBSAIGONGLISTEN.Models.ThongBao>
+
+@{
+    ViewData["Title"] = "Thông Báo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center my-4">@ViewData["Title"]</h2>
+
+<div class="container">
+    <!-- Bảng thông báo -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="thongBaoTable">
+        <thead class="thead-dark">
+            <tr>
+                <th>Tên người đặt</th>
+                <th>Mô Tả</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var thongBao in Model)
+            {
+                <tr data-description="@thongBao.Description" data-username="@thongBao.ApplicationUser?.UserName">
+                    <td>@thongBao.ApplicationUser?.UserName</td>
+                    <td>@thongBao.Description</td>
+                    <td>
+                        <button class="btn btn-info btn-sm showDetailsBtn">
+                            <i class="fas fa-info-circle"></i> Chi tiết
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        </table>
+    </div>
+
+    <!-- Modal hiển thị chi tiết thông báo -->
+    <div class="modal fade" id="thongBaoModal" tabindex="-1" aria-labelledby="thongBaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="thongBaoModalLabel">Chi tiết thông báo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <strong>Người đặt:</strong> <span id="username"></span><br>
+                    <strong>Mô tả:</strong> <span id="description"></span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS để cải thiện giao diện -->
+<style>
+    /* Import Google Fonts */
+    @@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    /* Page Title */
+    h2 {
+        font-family: 'Poppins', sans-serif;
+        color: #2c3e50;
+        font-weight: 700;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        margin-bottom: 2rem !important;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Main Container Background */
+    body {
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+        min-height: 100vh;
+    }
+
+    /* Table Styling */
+    .table {
+        font-family: 'Poppins', sans-serif;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(43, 34, 120, 0.15);
+        border: none;
+        margin-bottom: 0;
+        background: white;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        border: none;
+        padding: 1.2rem 1rem;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .table tbody tr:nth-of-type(odd) {
+        background-color: #f8f9ff;
+    }
+
+    .table tbody tr:hover {
+        background: linear-gradient(135deg, #e8f0ff 0%, #f0f4ff 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(43, 34, 120, 0.2);
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1.2rem 1rem;
+        border: none;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .table td:first-child {
+        font-weight: 600;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    }
+
+    /* Button Styling */
+    .btn-info {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .btn-info:hover {
+        background: linear-gradient(135deg, #34495e, #2c3e50);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
+    }
+
+    /* Empty State */
+    .table tbody tr td.text-center {
+        padding: 3rem 1rem;
+        color: #2c3e50;
+        font-style: italic;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%) !important;
+        font-weight: 500;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .modal-body {
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+    }
+
+    .modal-body strong {
+        color: #2c3e50;
+        font-weight: 600;
+        display: inline-block;
+        min-width: 100px;
+    }
+
+    .modal-body span {
+        color: #333;
+        font-weight: 500;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #2c3e50;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+
+    .modal-footer {
+        border: none;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+        border-radius: 0 0 15px 15px;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    /* Container Styling */
+    .container {
+        max-width: 1200px;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .table-responsive {
+            border-radius: 15px;
+        }
+        
+        .table thead th,
+        .table td {
+            padding: 0.8rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-info {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<script>
+    // jQuery để xử lý các sự kiện
+    $(document).ready(function () {
+        // Khi nhấp vào nút "Chi tiết"
+        $(".showDetailsBtn").click(function () {
+            var row = $(this).closest("tr"); // Tìm dòng tương ứng với nút đã nhấp
+            var description = row.data("description");
+            var username = row.data("username");
+
+            // Cập nhật nội dung modal với thông tin từ dòng được nhấp
+            $("#username").text(username);
+            $("#description").text(description);
+
+            // Mở modal
+            $("#thongBaoModal").modal('show');
+        });
+
+        // Ẩn thông báo nếu không có thông báo nào
+        if ($("#thongBaoTable tbody tr").length === 0) {
+            var noDataMessage = "<tr><td colspan='3' class='text-center'>Không có thông báo nào.</td></tr>";
+            $("#thongBaoTable tbody").html(noDataMessage);
+        }
+    });
+</script>

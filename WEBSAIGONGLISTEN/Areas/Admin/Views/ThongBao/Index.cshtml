@@ -1,0 +1,105 @@
+﻿@model IEnumerable<WEBSAIGONGLISTEN.Models.ThongBao>
+
+<style>
+    .table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    .table th:nth-child(1), .table td:nth-child(1) { 
+        width: 8% !important; 
+        max-width: 80px !important;
+    } /* ID */
+    
+    .table th:nth-child(2), .table td:nth-child(2) { 
+        width: 35% !important; 
+        max-width: 350px !important;
+    } /* Description - giảm từ 50% xuống 35% */
+    
+    .table th:nth-child(3), .table td:nth-child(3) { 
+        width: 25% !important; 
+        max-width: 250px !important;
+    } /* Booking ID */
+    
+    .table th:nth-child(4), .table td:nth-child(4) { 
+        width: 20% !important; 
+        max-width: 200px !important;
+    } /* Name */
+    
+    .table th:nth-child(5), .table td:nth-child(5) { 
+        width: 17% !important; 
+        max-width: 170px !important;
+    } /* Actions */
+    
+    .table td {
+        vertical-align: middle !important;
+        word-wrap: break-word !important;
+        overflow: hidden !important;
+    }
+    
+    .description-cell {
+        max-width: 350px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        word-wrap: break-word !important;
+    }
+    
+    .description-cell:hover {
+        white-space: normal !important;
+        overflow: visible !important;
+        background-color: #f8f9fa !important;
+        position: relative !important;
+        z-index: 10 !important;
+        max-width: 400px !important;
+    }
+</style>
+
+<h2>Danh sách Thông Báo</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Description</th>
+            <th>Booking ID</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var thongBao in Model)
+        {
+            <tr>
+                <td>@thongBao.Id</td>
+                <td class="description-cell" title="@thongBao.Description">
+                    @(thongBao.Description?.Length > 100 ? thongBao.Description.Substring(0, 100) + "..." : thongBao.Description)
+                </td>
+                <td>@thongBao.UserId</td>
+                <td>
+                    @if (thongBao.ApplicationUser != null)
+                    {
+                        <span class="badge bg-primary">
+                            <i class="fas fa-user me-1"></i>
+                            @(thongBao.ApplicationUser.FullName ?? thongBao.ApplicationUser.Email ?? "N/A")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">
+                            <i class="fas fa-user-slash me-1"></i>
+                            Không xác định
+                        </span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@thongBao.Id" class="btn btn-info btn-sm">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@thongBao.Id" class="btn btn-warning btn-sm">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@thongBao.Id" class="btn btn-danger btn-sm">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-primary">Tạo Thông Báo Mới</a>

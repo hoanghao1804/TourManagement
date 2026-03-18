@@ -1,0 +1,60 @@
+﻿@model WEBSAIGONGLISTEN.Models.Momo.MomoExecuteResponseModel
+
+@{
+    ViewData["Title"] = "Thanh toán Momo";
+}
+
+<div class="container text-center mt-5">
+    @if (Model.IsSuccess)
+    {
+        <h1 class="display-4 text-success animated fadeInDown">Thanh toán Momo</h1>
+        <div class="card shadow-lg my-4">
+            <div class="card-body">
+                <h2 class="text-success">🎉 Thanh Toán Thành Công 🎉</h2>
+                <p class="lead">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+                <p>Order ID: <strong>@Model.UserID</strong></p>
+                <p>Amount: <strong>@Model.TotalPrice</strong></p>
+                <p>Order Info: <strong>@Model.OrderInfo</strong></p>   
+
+                <img src="https://media.giphy.com/media/xT9IgH2q8uN1lD5E4A/giphy.gif" class="img-fluid mt-3" alt="Thanh toán thành công" style="max-width: 300px; border-radius: 15px;" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <h1 class="display-4 text-danger animated fadeInDown">Thanh toán Momo</h1>
+        <div class="card shadow-lg my-4">
+            <div class="card-body">
+                <h2 class="text-danger">❌ Thanh Toán Thất Bại ❌</h2>
+                <p class="lead">Rất tiếc, thanh toán của bạn không thành công!</p>
+                <p>Order ID: <strong>@Model.UserID</strong></p>
+                <p>Amount: <strong>@Model.TotalPrice</strong></p>
+                <p>Order Info: <strong>@Model.OrderInfo</strong></p>
+                
+
+                <img src="https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif" class="img-fluid mt-3" alt="Thanh toán thất bại" style="max-width: 300px; border-radius: 15px;" />
+            </div>
+        </div>
+    }
+
+    <div class="mt-5 mb-5">
+        <button class="btn btn-primary btn-lg" onclick="window.location.href='@Url.Action("Index", "Home")'">Quay lại trang chủ</button>
+        @if (!Model.IsSuccess)
+        {
+            <button class="btn btn-warning btn-lg ms-2" onclick="window.location.href='@Url.Action("Index", "Home")'">Thử lại</button>
+        }
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Hiệu ứng cho tiêu đề
+        $('.display-4').addClass('animated bounceIn');
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

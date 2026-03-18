@@ -1,0 +1,355 @@
+﻿@model IEnumerable<WEBSAIGONGLISTEN.Models.TourDay>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Danh Sách Ngày Tour";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<style>
+    .table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        margin: 0 !important;
+    }
+    
+    #tourDayTableContainer {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .table-responsive {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .table td {
+        vertical-align: middle !important;
+        word-wrap: break-word !important;
+        overflow: hidden !important;
+    }
+    
+    .table th:nth-child(1), .table td:nth-child(1) { 
+        width: 5% !important; 
+        max-width: 50px !important;
+    } /* STT */
+    
+    .table th:nth-child(2), .table td:nth-child(2) { 
+        width: 8% !important; 
+        max-width: 80px !important;
+    } /* Ngày Thứ */
+    
+    .table th:nth-child(3), .table td:nth-child(3) { 
+        width: 20% !important; 
+        max-width: 200px !important;
+    } /* Mô Tả */
+    
+    .table th:nth-child(4), .table td:nth-child(4) { 
+        width: 12% !important; 
+        max-width: 120px !important;
+    } /* Hình ảnh */
+    
+    .table th:nth-child(5), .table td:nth-child(5) { 
+        width: 15% !important; 
+        max-width: 150px !important;
+    } /* Danh Mục */
+    
+    .table th:nth-child(6), .table td:nth-child(6) { 
+        width: 25% !important; 
+        max-width: 250px !important;
+    } /* Sản Phẩm */
+    
+    .table th:nth-child(7), .table td:nth-child(7) { 
+        width: 15% !important; 
+        max-width: 150px !important;
+    } /* Hành Động */
+    
+    .description-cell {
+        max-width: 200px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        word-wrap: break-word !important;
+    }
+    
+    .description-cell:hover {
+        white-space: normal !important;
+        overflow: visible !important;
+        background-color: #f8f9fa !important;
+        position: relative !important;
+        z-index: 10 !important;
+        max-width: 300px !important;
+    }
+    
+    .table img {
+        max-width: 100px !important;
+        height: 60px !important;
+        object-fit: cover !important;
+        border-radius: 5px !important;
+    }
+</style>
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Filter Section -->
+<div class="card mb-4 shadow">
+    <div class="card-body">
+        <form id="filterForm">
+            <div class="row g-2">
+                <!-- Tìm kiếm theo tên tour -->
+                <div class="col-md-2">
+                    <label for="searchName" class="form-label fw-bold">
+                        <i class="fas fa-search me-1"></i>
+                        Tìm kiếm theo tên tour
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="searchName" 
+                           name="searchName" 
+                           value="@(ViewBag.SearchName ?? "")"
+                           placeholder="Nhập tên tour...">
+                </div>
+
+                <!-- Filter theo danh mục -->
+                <div class="col-md-2">
+                    <label for="categoryFilter" class="form-label fw-bold">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        Danh mục
+                    </label>
+                    <select class="form-select" id="categoryFilter" name="categoryId">
+                        <option value="">Tất cả danh mục</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            @foreach (var category in ViewBag.Categories)
+                            {
+                                var isSelected = ViewBag.SelectedCategoryId?.ToString() == category.Id.ToString() ? "selected" : "";
+                                <option value="@category.Id" selected="@isSelected">
+                                    @category.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Filter theo sản phẩm -->
+                <div class="col-md-2">
+                    <label for="productFilter" class="form-label fw-bold">
+                        <i class="fas fa-box me-1"></i>
+                        Sản phẩm
+                    </label>
+                    <select class="form-select" id="productFilter" name="productId">
+                        <option value="">Tất cả sản phẩm</option>
+                        @if (ViewBag.Products != null)
+                        {
+                            @foreach (var product in ViewBag.Products)
+                            {
+                                var isSelected = ViewBag.SelectedProductId?.ToString() == product.Id.ToString() ? "selected" : "";
+                                <option value="@product.Id" selected="@isSelected" data-category="@product.CategoryId">
+                                    @product.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Filter theo ngày thứ -->
+                <div class="col-md-2">
+                    <label for="dayNumberFilter" class="form-label fw-bold">
+                        <i class="fas fa-calendar-day me-1"></i>
+                        Ngày Thứ
+                    </label>
+                    <input type="number" 
+                           class="form-control" 
+                           id="dayNumberFilter" 
+                           name="dayNumberFilter" 
+                           value="@(ViewBag.DayNumberFilter ?? "")"
+                           placeholder="Nhập ngày thứ...">
+                </div>
+
+                <!-- Nút tìm kiếm -->
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" id="searchBtn" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>
+                        Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between mb-3">
+    <h4>Danh Sách Ngày Tour</h4>
+    <a asp-action="Create" class="btn btn-success">Thêm Ngày Tour Mới</a>
+</div>
+
+<div id="tourDayTableContainer">
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">STT</th>
+                <th scope="col">Ngày Thứ</th>
+                <th scope="col">Mô Tả</th>
+                <th>Hình ảnh</th>
+                <th scope="col">Danh Mục</th>
+                <th scope="col">Sản Phẩm</th>
+                <th scope="col" class="text-center">Hành Động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                int stt = 1;
+                foreach (var tourDay in Model)
+                {
+                    <tr>
+                        <td>@stt</td>
+                        <td>@tourDay.DayNumber</td>
+                        <td class="description-cell" title="@tourDay.Description">
+                            @(tourDay.Description?.Length > 150 ? tourDay.Description.Substring(0, 150) + "..." : tourDay.Description)
+                        </td>
+                        <td><img src="@tourDay.ImageUrl" alt="Product Image"></td>
+                        <td>@tourDay.Category?.Name</td>
+                        <td>@tourDay.Product?.Name</td>
+                        <td class="text-center">
+                            <a asp-action="Details" asp-route-id="@tourDay.Id" class="btn btn-info btn-sm">Chi Tiết</a>
+                            <a asp-action="Edit" asp-route-id="@tourDay.Id" class="btn btn-primary btn-sm">Sửa</a>
+                            <a asp-action="Delete" asp-route-id="@tourDay.Id" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa?');">Xóa</a>
+                        </td>
+                    </tr>
+                    stt++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">Không có ngày tour nào để hiển thị</td> <!-- Đã điều chỉnh số cột cho chính xác -->
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // AJAX search function
+            function performSearch() {
+                const searchName = document.getElementById('searchName').value;
+                const categoryId = document.getElementById('categoryFilter').value;
+                const productId = document.getElementById('productFilter').value;
+                const dayNumber = document.getElementById('dayNumberFilter').value;
+
+                const params = new URLSearchParams();
+                if (searchName) params.append('searchName', searchName);
+                if (categoryId) params.append('categoryId', categoryId);
+                if (productId) params.append('productId', productId);
+                if (dayNumber) params.append('dayNumberFilter', dayNumber);
+
+                // Show loading
+                document.getElementById('tourDayTableContainer').innerHTML = '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                fetch('@Url.Action("Index")?' + params.toString())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // Parse the response to extract only the table content
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const tableContainer = doc.querySelector('#tourDayTableContainer');
+                        
+                        if (tableContainer) {
+                            document.getElementById('tourDayTableContainer').innerHTML = tableContainer.innerHTML;
+                        } else {
+                            document.getElementById('tourDayTableContainer').innerHTML = '<div class="alert alert-warning">Không tìm thấy kết quả nào</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('tourDayTableContainer').innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tìm kiếm</div>';
+                    });
+            }
+
+            // Search button click
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+
+            // Auto-search when select changes
+            document.getElementById('categoryFilter').addEventListener('change', function() {
+                // Load products for selected category
+                loadProductsByCategory(this.value);
+                performSearch();
+            });
+
+            document.getElementById('productFilter').addEventListener('change', performSearch);
+
+            // Auto-search when day number changes
+            document.getElementById('dayNumberFilter').addEventListener('input', performSearch);
+
+            // Search with Enter key
+            document.getElementById('searchName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+
+            // Load products by category
+            function loadProductsByCategory(categoryId) {
+                const productSelect = document.getElementById('productFilter');
+                
+                if (!categoryId) {
+                    // Show all products
+                    const allOptions = productSelect.querySelectorAll('option');
+                    allOptions.forEach(option => {
+                        option.style.display = '';
+                    });
+                    return;
+                }
+
+                // Hide all options first
+                const allOptions = productSelect.querySelectorAll('option');
+                allOptions.forEach(option => {
+                    if (option.value === '') {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+
+                // Show only products from selected category
+                allOptions.forEach(option => {
+                    if (option.dataset.category === categoryId) {
+                        option.style.display = '';
+                    }
+                });
+
+                // Reset product selection
+                productSelect.value = '';
+            }
+
+            // Initialize products based on selected category
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            if (selectedCategory) {
+                loadProductsByCategory(selectedCategory);
+            }
+        });
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

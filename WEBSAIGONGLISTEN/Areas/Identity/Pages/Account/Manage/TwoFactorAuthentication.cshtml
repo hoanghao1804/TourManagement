@@ -1,0 +1,193 @@
+﻿@page
+@model TwoFactorAuthenticationModel
+@{
+    ViewData["Title"] = "Xác thực 2 lớp (2FA)";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/account-manage.css" />
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Cài đặt tài khoản</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="/Identity/Account/Manage" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                    </a>
+                    <a href="/Identity/Account/Manage/Email" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i>Email
+                    </a>
+                    <a href="/Identity/Account/Manage/ChangePassword" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>Mật khẩu
+                    </a>
+                    <a href="/Identity/Account/Manage/ExternalLogins" class="list-group-item list-group-item-action">
+                        <i class="fas fa-external-link-alt me-2"></i>Đăng nhập bên ngoài
+                    </a>
+                     <a href="/Identity/Account/Manage/TwoFactorAuthentication" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>Xác thực 2 lớp
+                    </a>
+                    <a href="/Identity/Account/Manage/PersonalData" class="list-group-item list-group-item-action">
+                        <i class="fas fa-download me-2"></i>Tải dữ liệu
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Status Message -->
+            <partial name="_StatusMessage" for="StatusMessage" />
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Xác thực 2 lớp (2FA)</h4>
+                    <small class="text-muted">Tăng cường bảo mật tài khoản với xác thực 2 lớp</small>
+                </div>
+                <div class="card-body">
+                    @if (Model.Is2faEnabled)
+                    {
+                        <!-- 2FA Status -->
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Xác thực 2 lớp đã được bật</strong>
+                            <p class="mb-0">Tài khoản của bạn được bảo mật bằng xác thực 2 lớp</p>
+                        </div>
+
+                        <!-- Recovery Codes Status -->
+                        @if (Model.RecoveryCodesLeft == 0)
+                        {
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Bạn không còn mã khôi phục nào.</strong>
+                                <p>Bạn phải <a asp-page="./GenerateRecoveryCodes" class="alert-link">tạo mã khôi phục mới</a> trước khi có thể đăng nhập bằng mã khôi phục.</p>
+                            </div>
+                        }
+                        else if (Model.RecoveryCodesLeft == 1)
+                        {
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Bạn chỉ còn 1 mã khôi phục.</strong>
+                                <p>Bạn nên <a asp-page="./GenerateRecoveryCodes" class="alert-link">tạo mã khôi phục mới</a>.</p>
+                            </div>
+                        }
+                        else if (Model.RecoveryCodesLeft <= 3)
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Bạn chỉ còn @Model.RecoveryCodesLeft mã khôi phục.</strong>
+                                <p>Bạn nên <a asp-page="./GenerateRecoveryCodes" class="alert-link">tạo mã khôi phục mới</a>.</p>
+                            </div>
+                        }
+
+                        <!-- 2FA Management -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-mobile-alt me-2"></i>Ứng dụng xác thực</h5>
+                                        <p class="text-muted">Quản lý ứng dụng xác thực của bạn</p>
+                                        
+                                        @if (!Model.HasAuthenticator)
+                                        {
+                                            <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                                                <i class="fas fa-plus me-2"></i>Thêm ứng dụng xác thực
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-grid gap-2">
+                                                <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-outline-primary">
+                                                    <i class="fas fa-cog me-2"></i>Cài đặt ứng dụng xác thực
+                                                </a>
+                                                <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-warning">
+                                                    <i class="fas fa-redo me-2"></i>Đặt lại ứng dụng xác thực
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-key me-2"></i>Mã khôi phục</h5>
+                                        <p class="text-muted">Quản lý mã khôi phục khẩn cấp</p>
+                                        <div class="d-grid gap-2">
+                                            <a asp-page="./GenerateRecoveryCodes" class="btn btn-outline-success">
+                                                <i class="fas fa-refresh me-2"></i>Tạo mã khôi phục mới
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Browser Management -->
+                        @if (Model.IsMachineRemembered)
+                        {
+                            <div class="mt-4">
+                                <h5><i class="fas fa-desktop me-2"></i>Quản lý trình duyệt</h5>
+                                <p class="text-muted">Quên trình duyệt này để yêu cầu xác thực 2 lớp cho lần đăng nhập tiếp theo</p>
+                                <form method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Quên trình duyệt này
+                                    </button>
+                                </form>
+                            </div>
+                        }
+
+                        <!-- Disable 2FA -->
+                        <div class="mt-4">
+                            <h5><i class="fas fa-ban me-2"></i>Tắt xác thực 2 lớp</h5>
+                            <p class="text-muted">Tắt xác thực 2 lớp sẽ làm giảm tính bảo mật của tài khoản</p>
+                            <a asp-page="./Disable2fa" class="btn btn-outline-danger">
+                                <i class="fas fa-ban me-2"></i>Tắt xác thực 2 lớp
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- 2FA Not Enabled -->
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Xác thực 2 lớp chưa được bật</strong>
+                            <p class="mb-0">Bật xác thực 2 lớp để tăng cường bảo mật tài khoản</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 3rem;"></i>
+                                        <h5>Bảo mật tài khoản</h5>
+                                        <p class="text-muted">Xác thực 2 lớp giúp bảo vệ tài khoản của bạn khỏi các mối đe dọa bảo mật</p>
+                                        <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                                            <i class="fas fa-shield-alt me-2"></i>Bật xác thực 2 lớp
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="/Identity/Account/Manage" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

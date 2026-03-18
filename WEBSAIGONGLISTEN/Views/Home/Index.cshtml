@@ -1,0 +1,448 @@
+﻿@model IEnumerable<WEBSAIGONGLISTEN.Models.Product>
+@{
+    ViewData["Title"] = "Trang chủ";
+    int numOfQuantity = 1;
+}
+
+<!-- Thêm thư viện Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+<!-- Index CSS -->
+<link rel="stylesheet" href="~/css/index.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    // Custom Carousel Implementation
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = document.getElementById('bannerCarousel');
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        let currentIndex = 0;
+        let isTransitioning = false;
+        
+        // Preload all images and set backgrounds
+        slides.forEach((slide, index) => {
+            const bgImage = slide.getAttribute('data-bg');
+            const img = new Image();
+            img.onload = function() {
+                slide.style.backgroundImage = `url(${bgImage})`;
+                if (index === 0) {
+                    slide.classList.add('active');
+                }
+            };
+            img.src = bgImage;
+        });
+        
+        function showSlide(index) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            
+            // Hide current slide
+            slides[currentIndex].classList.remove('active');
+            
+            // Show new slide
+            currentIndex = index;
+            slides[currentIndex].classList.add('active');
+            
+            setTimeout(() => {
+                isTransitioning = false;
+            }, 800);
+        }
+        
+        function nextSlide() {
+            const nextIndex = (currentIndex + 1) % slides.length;
+            showSlide(nextIndex);
+        }
+        
+        function prevSlide() {
+            const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+            showSlide(prevIndex);
+        }
+        
+        // Event listeners
+        if (nextBtn) {
+            nextBtn.addEventListener('click', nextSlide);
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', prevSlide);
+        }
+        
+        // Auto-rotate every 5 seconds
+        setInterval(() => {
+            if (!isTransitioning) {
+                nextSlide();
+            }
+        }, 5000);
+    });
+
+    // AJAX Search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.querySelector('#search-section form');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const searchResults = document.getElementById('searchResults');
+        
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+            
+            // Real-time search on input change (optional)
+            const searchInputs = searchForm.querySelectorAll('input, select');
+            searchInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    // Debounce search to avoid too many requests
+                    clearTimeout(window.searchTimeout);
+                    window.searchTimeout = setTimeout(() => {
+                        performSearch();
+                    }, 500);
+                });
+            });
+        }
+
+        function performSearch() {
+            const formData = new FormData(searchForm);
+            const searchParams = new URLSearchParams();
+            
+            // Add form data to search params
+            for (let [key, value] of formData.entries()) {
+                if (value.trim() !== '') {
+                    searchParams.append(key, value);
+                }
+            }
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            searchResults.style.display = 'none';
+            
+            // Perform AJAX request
+            fetch('@Url.Action("Index", "Home")?' + searchParams.toString())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    // Parse the response HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Extract the products section
+                    const newProductsSection = doc.querySelector('.products-section');
+                    if (newProductsSection) {
+                        // Update the search results
+                        searchResults.innerHTML = newProductsSection.querySelector('#searchResults').innerHTML;
+                        
+                        // Update pagination if exists
+                        const paginationSection = doc.querySelector('.py-5.bg-light');
+                        const currentPagination = document.querySelector('.py-5.bg-light');
+                        
+                        if (paginationSection && currentPagination) {
+                            currentPagination.innerHTML = paginationSection.innerHTML;
+                        } else if (paginationSection && !currentPagination) {
+                            // Add pagination if it doesn't exist
+                            const productsSection = document.querySelector('.products-section');
+                            productsSection.insertAdjacentHTML('afterend', paginationSection.outerHTML);
+                        } else if (!paginationSection && currentPagination) {
+                            // Remove pagination if no longer needed
+                            currentPagination.remove();
+                        }
+                        
+                        // Update URL without reload
+                        const newUrl = window.location.pathname + '?' + searchParams.toString();
+                        history.pushState(null, null, newUrl);
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    // Show error message
+                    searchResults.innerHTML = `
+                        <div class="alert alert-danger text-center">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                    searchResults.style.display = 'block';
+                });
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const paginationLinks = document.querySelectorAll('.pagination-link'); // Lấy tất cả các liên kết phân trang
+
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();  // Ngừng hành động mặc định của thẻ <a> (không chuyển trang)
+
+                const page = this.getAttribute('data-page'); // Lấy số trang từ data-page của nút phân trang
+
+                // Gửi yêu cầu AJAX để lấy dữ liệu cho trang mới
+                fetch('@Url.Action("Index", "Home")?page=' + page)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Phân tích HTML trả về và thay thế nội dung phân trang
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html'); // Chuyển đổi HTML về DOM
+
+                        // Lấy phần tử sản phẩm và phân trang mới từ HTML trả về
+                        const newProductsSection = doc.querySelector('.products-section');
+                        const newPagination = doc.querySelector('.py-5.bg-light');
+
+                        // Cập nhật phần sản phẩm
+                        document.querySelector('.products-section').innerHTML = newProductsSection.innerHTML;
+
+                        // Cập nhật phân trang nếu có
+                        document.querySelector('.py-5.bg-light').innerHTML = newPagination.innerHTML;
+
+                        // Cập nhật URL với tham số page mà không làm mới trang
+                        const newUrl = window.location.pathname + '?page=' + page;
+                        history.pushState({ page: page }, '', newUrl);  // Cập nhật URL mà không tải lại trang
+                    })
+                    .catch(error => {
+                        console.error('Error loading page:', error);
+                    });
+            });
+        });
+
+        // Lắng nghe sự kiện khi người dùng quay lại trang trước (quay lại trang trong lịch sử trình duyệt)
+        window.addEventListener('popstate', function (event) {
+            if (event.state && event.state.page) {
+                fetch('@Url.Action("Index", "Home")?page=' + event.state.page)
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        document.querySelector('.products-section').innerHTML = doc.querySelector('.products-section').innerHTML;
+                        document.querySelector('.py-5.bg-light').innerHTML = doc.querySelector('.py-5.bg-light').innerHTML;
+                    });
+            }
+        });
+    });
+
+</script>
+
+<!-- Hero Carousel Section -->
+<section id="bannerCarousel" class="custom-carousel">
+    <div class="carousel-container">
+        <div class="carousel-slide active" data-bg="/images/du-lich.jpg">
+            <div class="carousel-caption">
+                <h2>Chào mừng đến với SAIGON GLISTEN!</h2>
+                <p>Khám phá những điểm đến tuyệt vời nhất Việt Nam</p>
+                <a href="#search-section" class="hero-cta">
+                    <i class="fas fa-search me-2"></i>Tìm kiếm ngay
+                </a>
+            </div>
+        </div>
+        <div class="carousel-slide" data-bg="/images/vinh-ha-long-ky-quan-thien-nhien.jpg">
+            <div class="carousel-caption">
+                <h2>Vịnh Hạ Long - Kỳ quan thiên nhiên</h2>
+                <p>Trải nghiệm vẻ đẹp hùng vĩ của di sản thế giới</p>
+                <a href="#search-section" class="hero-cta">
+                    <i class="fas fa-compass me-2"></i>Khám phá ngay
+                </a>
+            </div>
+        </div>
+        <div class="carousel-slide" data-bg="/images/sapa-thanh-pho-trong-may.jpg">
+            <div class="carousel-caption">
+                <h2>Sa Pa - Thành phố trong mây</h2>
+                <p>Đắm chìm trong không gian mát mẻ và cảnh đẹp núi rừng</p>
+                <a href="#search-section" class="hero-cta">
+                    <i class="fas fa-mountain me-2"></i>Đặt tour ngay
+                </a>
+            </div>
+        </div>
+        <div class="carousel-slide" data-bg="/images/hoi-an-pho-co-quyen-ru.jpg">
+            <div class="carousel-caption">
+                <h2>Hội An - Phố cổ quyến rũ</h2>
+                <p>Khám phá văn hóa và lịch sử của thành phố cổ xinh đẹp</p>
+                <a href="#search-section" class="hero-cta">
+                    <i class="fas fa-city me-2"></i>Trải nghiệm ngay
+                </a>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" id="prevBtn">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" id="nextBtn">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</section>
+
+<!-- Search Section -->
+<section id="search-section" class="search-section">
+    <div class="container">
+        <div class="search-card">
+            <h2 class="search-title">
+                <i class="fas fa-search me-3"></i>Tìm kiếm tour du lịch
+            </h2>
+        <form method="get" asp-action="Index">
+                <div class="row g-4">
+                <div class="col-md-3">
+                        <label for="query" class="form-label fw-bold">
+                            <i class="fas fa-key me-2"></i>Từ khóa
+                        </label>
+                        <input type="text" id="query" name="query" class="form-control" placeholder="Nhập tên tour, địa điểm..." />
+                </div>
+                <div class="col-md-3">
+                        <label for="categoryId" class="form-label fw-bold">
+                            <i class="fas fa-map-marker-alt me-2"></i>Điểm khởi hành
+                        </label>
+                    <select id="categoryId" name="categoryId" class="form-select">
+                            <option value="">--- Chọn điểm khởi hành ---</option>
+                        @foreach (var category in ViewData["Categories"] as List<WEBSAIGONGLISTEN.Models.Category>)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                        <label for="departureDate" class="form-label fw-bold">
+                            <i class="fas fa-calendar-alt me-2"></i>Ngày khởi hành
+                        </label>
+                    <input type="date" id="departureDate" name="departureDate" class="form-control" value="@ViewData["DepartureDate"]?.ToString()" />
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-search w-100">
+                            <i class="fas fa-search me-2"></i>Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+                </div>
+            </div>
+</section>
+
+<!-- Products Section -->
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">
+            <i class="fas fa-star me-3"></i>Tours du lịch nổi bật
+        </h2>
+        
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="text-center py-4" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mt-2">Đang tìm kiếm tour...</p>
+        </div>
+        
+        <!-- Search results container -->
+        <div id="searchResults">
+            <div class="row g-4">
+                @foreach (var item in Model)
+                {
+                    var isOutOfStock = item.Quantity == 0;
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card @if(isOutOfStock) { <text>out-of-stock</text> } fade-in">
+                            <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name">
+                            <div class="card-body">
+                                <h5 class="card-title">@Html.DisplayFor(modelItem => item.Name)</h5>
+                                <p class="card-text">
+                                    <i class="fas fa-clock me-2"></i>@item.DaysNightsDescription
+                                </p>
+                                @if (isOutOfStock)
+                                {
+                                    <div class="text-center">
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="fas fa-times-circle me-1"></i>Hết chỗ
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Home" asp-action="Display" asp-route-productId="@item.Id" asp-route-quantity="@numOfQuantity" class="btn btn-detail">
+                                        <i class="fas fa-eye me-2"></i>Xem chi tiết
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pagination Section -->
+@if ((int)ViewData["TotalPages"] > 1)
+{
+    <section class="py-5 bg-light">
+        <div class="container">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <!-- Nút Previous -->
+                    @if ((int)ViewData["CurrentPage"] > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link pagination-link" href="#" data-page="@((int)ViewData["CurrentPage"] - 1)">
+                                <i class="fas fa-chevron-left me-1"></i>Trước
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Hiển thị số trang -->
+                    @{
+                        int currentPage = (int)ViewData["CurrentPage"];
+                        int totalPages = (int)ViewData["TotalPages"];
+                        int startPage = Math.Max(1, currentPage - 2);
+                        int endPage = Math.Min(totalPages, currentPage + 2);
+                    }
+
+                    @if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link pagination-link" href="#" data-page="1">1</a>
+                        </li>
+                        @if (startPage > 2)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+                    }
+
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link pagination-link" href="#" data-page="@i">@i</a>
+                        </li>
+                    }
+
+                    @if (endPage < totalPages)
+                    {
+                        @if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link pagination-link" href="#" data-page="@totalPages">@totalPages</a>
+                        </li>
+                    }
+
+                    <!-- Nút Next -->
+                    @if ((int)ViewData["CurrentPage"] < (int)ViewData["TotalPages"])
+                    {
+                        <li class="page-item">
+                            <a class="page-link pagination-link" href="#" data-page="@((int)ViewData["CurrentPage"] + 1)">
+                                Sau <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </section>
+}

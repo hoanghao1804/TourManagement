@@ -1,0 +1,225 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container mt-4" style="max-width: 100% !important;">
+    <h2 class="text-center">@ViewData["Title"]</h2>
+    <p class="text-center text-muted">Thống kê đơn đặt hàng theo danh mục</p>
+
+    <div id="loading" class="text-center mt-4">
+        <p class="text-info">Đang tải dữ liệu, vui lòng đợi...</p>
+    </div>
+    <div id="error" class="text-center mt-4 text-danger d-none">
+        <p>Không thể tải dữ liệu. Vui lòng thử lại sau.</p>
+    </div>
+
+    <div class="row mt-5 d-none" id="chartContainer">
+        <!-- Biểu đồ cột -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header text-center bg-primary text-white">
+                    Biểu đồ cột
+                </div>
+                <div class="card-body">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ tròn -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header text-center bg-success text-white">
+                    Biểu đồ tròn
+                </div>
+                <div class="card-body">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ đường -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header text-center bg-info text-white">
+                    Biểu đồ đường
+                </div>
+                <div class="card-body">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ radar -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header text-center bg-warning text-dark">
+                    Biểu đồ radar
+                </div>
+                <div class="card-body">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS -->
+<style>
+    .container {
+        max-width: 1200px;
+    }
+
+    .card {
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    /* Equal height for all chart cards */
+    .chart-card {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+        .chart-card .card-body {
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 300px !important;
+        }
+
+    canvas {
+        display: block;
+        margin: 0 auto;
+        max-height: 300px;
+        max-width: 100%;
+        width: 100% !important;
+        height: 300px !important;
+    }
+
+    .text-center {
+        margin-top: 10px;
+        font-family: Arial, sans-serif;
+        font-size: 1rem;
+    }
+
+    /* Ensure all columns have equal height */
+    .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+
+        .row > [class*="col-"] {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+</style>
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const chartColors = [
+            'rgba(255, 99, 132, 0.6)', // Đỏ
+            'rgba(54, 162, 235, 0.6)', // Xanh dương
+            'rgba(255, 206, 86, 0.6)', // Vàng
+            'rgba(75, 192, 192, 0.6)', // Xanh ngọc
+            'rgba(153, 102, 255, 0.6)', // Tím
+        ];
+
+        // Load dữ liệu qua AJAX
+        $.ajax({
+            type: "POST",
+            url: "/Admin/Dashboard/GetTotalOders",
+            dataType: "json",
+            success: function (data) {
+                $('#loading').addClass('d-none');
+                $('#chartContainer').removeClass('d-none');
+                renderCharts(data);
+            },
+            error: function () {
+                $('#loading').addClass('d-none');
+                $('#error').removeClass('d-none');
+            },
+        });
+
+        // Hàm vẽ biểu đồ
+        function renderCharts(data) {
+            const labels = data[0];
+            const chartData = data[1];
+
+            // Biểu đồ cột
+            new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng đặt hàng',
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderColor: chartColors.map(c => c.replace('0.6', '1')),
+                        borderWidth: 1,
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // Biểu đồ tròn
+            new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderColor: chartColors.map(c => c.replace('0.6', '1')),
+                        borderWidth: 1,
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // Biểu đồ đường
+            new Chart(document.getElementById('lineChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng đặt hàng',
+                        data: chartData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.4)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        fill: true,
+                        tension: 0.4,
+                    }]
+                },
+                options: { responsive: true }
+            });
+
+            // Biểu đồ radar
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng đặt hàng',
+                        data: chartData,
+                        backgroundColor: 'rgba(255, 206, 86, 0.4)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        fill: true,
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+    });
+</script>

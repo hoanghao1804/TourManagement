@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SAIGON GLISTEN</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            color: #333 !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            margin-bottom: 8px !important;
+            display: block !important;
+        }
+        
+        .form-control {
+            border: 2px solid #ddd !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            font-size: 0.9rem !important;
+            transition: all 0.3s ease !important;
+            background: #fff !important;
+            width: 100% !important;
+        }
+        
+        .form-control:focus {
+            border-color: #007bff !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+            outline: none !important;
+        }
+        
+        .password-input-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute !important;
+            right: 12px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: none !important;
+            border: none !important;
+            color: #666 !important;
+            cursor: pointer !important;
+            font-size: 1rem !important;
+            padding: 4px !important;
+            transition: color 0.3s ease !important;
+            z-index: 2 !important;
+        }
+        
+        .password-toggle:hover {
+            color: #333 !important;
+        }
+        
+        /* Ensure auth background is always visible */
+        body {
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center center / cover no-repeat fixed !important;
+            min-height: 100vh !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            position: relative !important;
+            overflow-x: hidden !important;
+        }
+        
+        body::before {
+            content: '' !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%) !important;
+            pointer-events: none !important;
+            z-index: -1 !important;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-image-section">
+                <div class="auth-image-content">
+                    @RenderSection("AuthImageContent", required: false)
+                </div>
+            </div>
+            
+            <div class="auth-form-section">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,95 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "~/Areas/Identity/Pages/Shared/_AuthLayout.cshtml";
+}
+
+@section AuthImageContent {
+    <h2>WELCOME BACK</h2>
+    <p>Khám phá những chuyến du lịch tuyệt vời cùng SAIGON GLISTEN. Đăng nhập để trải nghiệm dịch vụ tốt nhất.</p>
+}
+
+<h2 class="form-title">ĐĂNG NHẬP</h2>
+<p class="form-subtitle">Đăng nhập vào tài khoản của bạn để tiếp tục</p>
+
+<form id="account" method="post">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    
+    <div class="form-group">
+        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Email" />
+        <span asp-validation-for="Input.Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <div class="password-input-wrapper">
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Mật khẩu" id="passwordInput" />
+            <button type="button" class="password-toggle" onclick="togglePassword()">
+                <i class="fas fa-eye" id="toggleIcon"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Input.Password" class="text-danger"></span>
+    </div>
+
+    <div class="remember-me">
+        <div class="checkbox-group">
+            <input asp-for="Input.RememberMe" class="form-check-input" />
+            <label asp-for="Input.RememberMe" class="form-check-label">
+                Ghi nhớ đăng nhập
+            </label>
+        </div>
+        <a id="forgot-password" asp-page="./ForgotPassword" class="forgot-password-link">
+            Quên mật khẩu?
+        </a>
+    </div>
+
+    <button type="submit" class="btn btn-auth">
+        ĐĂNG NHẬP NGAY
+    </button>
+</form>
+
+<div class="divider">
+    Hoặc đăng nhập bằng
+</div>
+
+<form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+    <div class="social-login">
+        <button type="submit" class="btn btn-social btn-google" name="provider" value="Google">
+            <i class="fab fa-google"></i>
+            <span>Google</span>
+        </button>
+        <button type="submit" class="btn btn-social btn-facebook" name="provider" value="Facebook">
+            <i class="fab fa-facebook-f"></i>
+            <span>Facebook</span>
+        </button>
+        <button type="submit" class="btn btn-social btn-github" name="provider" value="GitHub">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+        </button>
+    </div>
+</form>
+
+<div class="auth-links">
+    Tôi chưa có tài khoản. <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Đăng ký ngay</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

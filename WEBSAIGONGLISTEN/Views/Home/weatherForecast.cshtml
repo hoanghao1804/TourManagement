@@ -1,0 +1,193 @@
+﻿@{
+    ViewData["Title"] = "Dự báo thời tiết";
+}
+
+<!-- Thêm Font Awesome và Google Fonts -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Weather CSS -->
+<link rel="stylesheet" href="~/css/weather.css" />
+
+<!-- Thêm jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Tìm kiếm khi nhấn Enter
+        $("#cityInput").on("keydown", function (event) {
+            if (event.key === "Enter") {
+                getWeatherForecast();
+            }
+        });
+
+        // Cập nhật dự báo khi người dùng chọn số ngày
+        $("#daysInput").on("change", function () {
+            getWeatherForecast();
+        });
+    });
+
+    async function getWeatherForecast() {
+        let city = document.getElementById("cityInput").value;
+        
+        if (!city.trim()) {
+            document.getElementById("weatherInfo").innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Vui lòng nhập tên thành phố để tìm kiếm.
+                </div>
+            `;
+            return;
+        }
+        
+        // Hiển thị loading
+        document.getElementById("weatherInfo").innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p style="margin-top: 20px; color: #667eea; font-weight: 600;">Đang tải dữ liệu thời tiết...</p>
+            </div>
+        `;
+        
+        // Xử lý chuỗi: chuyển về chữ thường, loại bỏ khoảng trắng thừa, bỏ dấu tiếng Việt
+        city = removeVietnameseTones(city.toLowerCase().trim());
+        
+        // Thêm 'Vietnam' để đảm bảo tìm kiếm trong phạm vi Việt Nam
+        city = `${city},vn`; 
+        
+        const selectedDay = document.getElementById("daysInput").value;
+        const apiKey = 'c7055ce01673bc05bf8af1cb09e60bd2'; // Thay bằng API key của bạn
+        const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&cnt=240&appid=${apiKey}&units=metric`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Không tìm thấy địa danh hoặc thông tin thời tiết.');
+            }
+            const data = await response.json();
+            displayWeatherForecast(data, selectedDay);
+        } catch (error) {
+            document.getElementById("weatherInfo").innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    function displayWeatherForecast(data, selectedDay) {
+        const dayIndex = (selectedDay - 1) * 8;
+        const dailyData = data.list[dayIndex];
+        const date = new Date(dailyData.dt_txt);
+        const weatherDescription = dailyData.weather[0].description;
+        const temperature = Math.round(dailyData.main.temp);
+        const humidity = dailyData.main.humidity;
+        const windSpeed = dailyData.wind.speed;
+        const pressure = dailyData.main.pressure;
+        const feelsLike = Math.round(dailyData.main.feels_like);
+        const weatherMain = dailyData.weather[0].main.toLowerCase();
+
+        // Chọn icon phù hợp
+        let weatherIcon = 'fa-cloud-sun';
+        let iconClass = 'cloudy';
+        
+        if (weatherMain.includes('clear') || weatherMain.includes('sun')) {
+            weatherIcon = 'fa-sun';
+            iconClass = 'sunny';
+        } else if (weatherMain.includes('rain')) {
+            weatherIcon = 'fa-cloud-rain';
+            iconClass = 'rainy';
+        } else if (weatherMain.includes('storm') || weatherMain.includes('thunder')) {
+            weatherIcon = 'fa-bolt';
+            iconClass = 'stormy';
+        } else if (weatherMain.includes('snow')) {
+            weatherIcon = 'fa-snowflake';
+            iconClass = 'cloudy';
+        }
+
+        const forecastHTML = `
+            <div class="weather-card">
+                <div class="weather-icon ${iconClass}">
+                    <i class="fas ${weatherIcon}"></i>
+                </div>
+                <div class="weather-details">
+                    <h4>${data.city.name}, ${data.city.country}</h4>
+                    <p class="weather-temp">${temperature}°C</p>
+                    <p style="font-size: 1.3rem; font-weight: 600; color: #2c3e50; text-transform: capitalize;">${weatherDescription}</p>
+                    <p style="color: #6c757d; font-size: 1.1rem;">Cảm giác như ${feelsLike}°C</p>
+                </div>
+                
+                <div class="weather-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-tint"></i>
+                        <h5>Độ ẩm</h5>
+                        <p>${humidity}%</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-wind"></i>
+                        <h5>Gió</h5>
+                        <p>${windSpeed} m/s</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                        <h5>Áp suất</h5>
+                        <p>${pressure} hPa</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-day"></i>
+                        <h5>Ngày</h5>
+                        <p>${date.toLocaleDateString('vi-VN', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("weatherInfo").innerHTML = forecastHTML;
+    }
+
+    // Hàm loại bỏ dấu tiếng Việt
+    function removeVietnameseTones(str) {
+        str = str.replace(/[\u0300-\u036f]/g, ""); // Loại bỏ dấu
+        str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+        return str;
+    }
+</script>
+
+<!-- Hero Section -->
+<div class="weather-hero">
+    <div class="weather-hero-content">
+        <h1><i class="fas fa-cloud-sun me-3"></i>Dự báo thời tiết</h1>
+        <p>Khám phá thời tiết tại các thành phố Việt Nam</p>
+    </div>
+</div>
+
+<!-- Weather Container -->
+<div class="weather-container">
+    <div class="weather-title">Dự báo thời tiết tại Việt Nam</div>
+    
+    <div class="search-section">
+        <div class="input-group mb-4">
+            <input type="text" id="cityInput" class="form-control" placeholder="Nhập tên thành phố, làng, hoặc khu vực..." aria-label="City">
+            <button class="btn btn-search" type="button" onclick="getWeatherForecast()">
+                <i class="fas fa-search me-2"></i>Tìm kiếm
+            </button>
+        </div>
+        
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-calendar-alt me-2"></i>Chọn số ngày</span>
+            <select id="daysInput" class="form-select">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <option value="@i">@i ngày</option>
+                }
+            </select>
+        </div>
+    </div>
+    
+    <div id="weatherInfo" class="weather-info"></div>
+</div>

@@ -1,0 +1,1840 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Saigon Glisten Admin</title>
+
+    <link rel="stylesheet" href="../../LayoutAdmin/assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="../../LayoutAdmin/assets/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="../../LayoutAdmin/assets/css/style.css">
+    <link rel="stylesheet" href="~/css/admin-custom.css">
+    <link rel="shortcut icon" href="../../LayoutAdmin/assets/images/saigon-glisten.jpg" />
+
+</head>
+<body>
+    <div class="container-scroller">
+        <!-- partial:../../partials/_navbar.html -->
+        <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+            <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
+                <a class="navbar-brand brand-logo" href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">
+                    <div class="brand-logo-content">
+                        <small class="brand-subtitle">Admin Panel</small>
+                    </div>
+                </a>
+            </div>
+ 
+            <div class="navbar-menu-wrapper d-flex align-items-stretch">
+            
+                <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+                    <span class="mdi mdi-menu"></span>
+                </button>
+
+                <!-- Header Actions -->
+                <ul class="navbar-nav navbar-nav-right">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-bs-toggle="dropdown">
+                            <i class="mdi mdi-bell-outline"></i>
+                            <span class="count-symbol bg-danger"></span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list" aria-labelledby="notificationDropdown">
+                            <h6 class="p-3 mb-0">Thông báo</h6>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-success">
+                                        <i class="mdi mdi-calendar"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content d-flex align-items-start flex-column justify-content-center">
+                                    <h6 class="preview-subject font-weight-normal mb-1">Đơn hàng mới</h6>
+                                    <p class="text-gray ellipsis mb-0"> Có đơn hàng mới cần xử lý </p>
+                                </div>
+                            </a>
+                        </div>
+                    </li>
+                    <li class="nav-item nav-profile dropdown">
+                        <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="nav-profile-img">
+                                <i class="mdi mdi-account-circle"></i>
+                            </div>
+                            <div class="nav-profile-text">
+                                <p class="mb-1 text-white">
+                                    @{
+                                        // Try different claim types for FullName
+                                        var fullName = User.FindFirst("FullName")?.Value ?? 
+                                                      User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")?.Value ??
+                                                      User.FindFirst("name")?.Value ??
+                                                      User.FindFirst("displayname")?.Value;
+                                        
+                                        // Debug: Show available claims (remove this in production)
+                                        // var allClaims = User.Claims.Select(c => c.Type + "=" + c.Value).ToList();
+                                        
+                                        var displayName = !string.IsNullOrEmpty(fullName) ? fullName : User.Identity?.Name?.Split('@')[0] ?? "User";
+                                    }
+                                    @displayName
+                                </p>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu navbar-dropdown" aria-labelledby="profileDropdown">
+                            <a class="dropdown-item" href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">
+                                <i class="mdi mdi-view-dashboard me-2 text-primary"></i> Dashboard
+                            </a>
+                            <a class="dropdown-item" href="@Url.Action("Index", "Home", new { area = "" })">
+                                <i class="mdi mdi-home me-2 text-success"></i> Về trang chủ
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="@Url.Action("Logout", "Account", new { area = "Identity" })">
+                                <i class="mdi mdi-logout me-2 text-danger"></i> Đăng xuất
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+                <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+                    <span class="mdi mdi-menu"></span>
+                </button>
+                 <!-- partial -->
+
+            </div>
+        </nav>
+        <!-- partial -->
+        <div class="container-fluid page-body-wrapper">
+            <nav class="sidebar sidebar-offcanvas" id="sidebar">
+                <ul class="nav">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Index", "Dashboard", new { area = "Admin" })" onclick="return loadPageWithFallback('@Url.Action("Index", "Dashboard", new { area = "Admin" })', 'Dashboard', this)">
+                            <i class="mdi mdi-view-dashboard menu-icon"></i>
+                            <span class="menu-title">Dashboard</span>
+                        </a>
+                    </li>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Company"))
+                    {
+                        <!-- Quản lý danh mục -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#" onclick="toggleSubmenu(this)">
+                                <i class="mdi mdi-format-list-bulleted menu-icon"></i>
+                                <span class="menu-title">Quản lý danh mục</span>
+                                <i class="mdi mdi-chevron-down submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "Categories")', 'Danh sách danh mục')">
+                                        <i class="mdi mdi-format-list-bulleted menu-icon"></i>
+                                        <span class="menu-title">Danh sách danh mục</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Add", "Categories")', 'Thêm danh mục')">
+                                        <i class="mdi mdi-plus-circle menu-icon"></i>
+                                        <span class="menu-title">Thêm danh mục</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Quản lý sản phẩm -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#" onclick="toggleSubmenu(this)">
+                                <i class="mdi mdi-package-variant menu-icon"></i>
+                                <span class="menu-title">Quản lý sản phẩm</span>
+                                <i class="mdi mdi-chevron-down submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "Product")', 'Danh sách sản phẩm')">
+                                        <i class="mdi mdi-package-variant menu-icon"></i>
+                                        <span class="menu-title">Danh sách sản phẩm</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Add", "Product")', 'Thêm sản phẩm')">
+                                        <i class="mdi mdi-plus-circle menu-icon"></i>
+                                        <span class="menu-title">Thêm sản phẩm</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Quản lý tour -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#" onclick="toggleSubmenu(this)">
+                                <i class="mdi mdi-calendar-clock menu-icon"></i>
+                                <span class="menu-title">Quản lý tour</span>
+                                <i class="mdi mdi-chevron-down submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "TourDay")', 'Lịch trình tour')">
+                                        <i class="mdi mdi-calendar-clock menu-icon"></i>
+                                        <span class="menu-title">Lịch trình tour</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Create", "TourDay")', 'Thêm lịch trình')">
+                                        <i class="mdi mdi-calendar-plus menu-icon"></i>
+                                        <span class="menu-title">Thêm lịch trình</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Giao dịch và thông báo -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#" onclick="toggleSubmenu(this)">
+                                <i class="mdi mdi-bell-outline menu-icon"></i>
+                                <span class="menu-title">Giao dịch và thông báo</span>
+                                <i class="mdi mdi-chevron-down submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "History")', 'Lịch sử giao dịch')">
+                                        <i class="mdi mdi-history menu-icon"></i>
+                                        <span class="menu-title">Lịch sử giao dịch</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "ThongBao", new { area = "Admin" })', 'Thông báo')">
+                                        <i class="mdi mdi-bell-outline menu-icon"></i>
+                                        <span class="menu-title">Thông báo</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Create", "ThongBao", new { area = "Admin" })', 'Tạo thông báo')">
+                                        <i class="mdi mdi-bell-plus menu-icon"></i>
+                                        <span class="menu-title">Tạo thông báo</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <!-- Quản lý hệ thống -->
+                        <li class="nav-item has-submenu">
+                            <a class="nav-link" href="#" onclick="toggleSubmenu(this)">
+                                <i class="mdi mdi-account-group menu-icon"></i>
+                                <span class="menu-title">Quản lý hệ thống</span>
+                                <i class="mdi mdi-chevron-down submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "Account")', 'Người dùng')">
+                                        <i class="mdi mdi-account-group menu-icon"></i>
+                                        <span class="menu-title">Người dùng</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="javascript:void(0)" onclick="return handleSubmenuItemClick(this, '@Url.Action("Index", "RecordVideo", new { area = "Admin" })', 'Record Video')">
+                                        <i class="mdi mdi-video menu-icon"></i>
+                                        <span class="menu-title">Record Video</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+
+            <div class="main-panel">
+                <div class="content-wrapper">
+                    @RenderBody()
+                </div>
+
+                <footer class="footer">
+                    <div class="container-fluid d-flex justify-content-between">
+                        <span class="text-muted d-block text-center text-sm-start d-sm-inline-block"> &copy; 2024 - SAIGON GLISTEN - Đồ án môn học</span>
+                       @*  <span class="float-none float-sm-end mt-1 mt-sm-0 text-end"> Free <a href="https://www.bootstrapdash.com/bootstrap-admin-template/" target="_blank">Bootstrap admin template</a> from Bootstrapdash.com</span> *@
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../LayoutAdmin/assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="../../LayoutAdmin/assets/js/off-canvas.js"></script>
+    <script src="../../LayoutAdmin/assets/js/hoverable-collapse.js"></script>
+    <script src="../../LayoutAdmin/assets/js/misc.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+    
+    <!-- Submenu Toggle Script -->
+    <script>
+        // Toggle submenu function - Global scope
+        function toggleSubmenu(element) {
+            // Prevent default and stop propagation
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            console.log('Toggle submenu clicked'); // Debug
+            
+            const parentItem = element.closest('.nav-item.has-submenu');
+            if (!parentItem) {
+                console.log('Parent item not found');
+                return false;
+            }
+            
+            const isActive = parentItem.classList.contains('active');
+            console.log('Is active:', isActive);
+            
+            // Close all other submenus
+            document.querySelectorAll('.nav-item.has-submenu.active').forEach(item => {
+                if (item !== parentItem) {
+                    item.classList.remove('active');
+                    console.log('Closed other submenu');
+                }
+            });
+            
+            // Toggle current submenu
+            if (isActive) {
+                parentItem.classList.remove('active');
+                console.log('Closed current submenu');
+            } else {
+                parentItem.classList.add('active');
+                console.log('Opened current submenu');
+            }
+            
+            return false; // Prevent default action
+        }
+
+        // Handle submenu item click
+        function handleSubmenuItemClick(element, url, title) {
+            // Prevent default
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // Load page
+            loadPage(url, title);
+            
+            // Update active states
+            updateActiveMenuItem(url);
+            
+            return false;
+        }
+
+        // AJAX Navigation function
+        function loadPage(url, title) {
+            // Show loading indicator
+            showLoading();
+            
+            // Update browser URL without reload
+            if (history.pushState) {
+                history.pushState(null, null, url);
+            }
+            
+            // Update page title
+            document.title = title + ' - Admin Panel';
+            
+            // Load content via AJAX
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log('Raw HTML response:', html.substring(0, 500)); // Debug
+                    
+                    // Extract main content from response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Try multiple selectors to find content
+                    let mainContent = doc.querySelector('.main-panel .content-wrapper') ||
+                                   doc.querySelector('.content-wrapper') ||
+                                   doc.querySelector('.main-panel') ||
+                                   doc.querySelector('main') ||
+                                   doc.querySelector('.container-fluid');
+                    
+                    console.log('Found main content:', mainContent); // Debug
+                    
+                    if (mainContent) {
+                        // Update content
+                        const contentWrapper = document.querySelector('.main-panel .content-wrapper') ||
+                                             document.querySelector('.content-wrapper') ||
+                                             document.querySelector('.main-panel');
+                        
+                        if (contentWrapper) {
+                            contentWrapper.innerHTML = mainContent.innerHTML;
+                            console.log('Content updated successfully');
+                            
+                            // Execute JavaScript after content is loaded
+                            executeScripts(mainContent);
+                            
+                            // Re-initialize common features after content is loaded
+                            setTimeout(() => {
+                                initializeCommonFeatures();
+                                initializePageSpecificFeatures();
+                            }, 100);
+                        } else {
+                            console.error('Could not find target content wrapper');
+                        }
+                        
+                        // Update active menu item
+                        updateActiveMenuItem(url);
+                        
+                        // Hide loading
+                        hideLoading();
+                        
+                        console.log('Page loaded successfully:', title);
+                    } else {
+                        console.error('Could not find main content in response');
+                        // Fallback: try to load the page normally
+                        window.location.href = url;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    hideLoading();
+                    alert('Lỗi khi tải trang: ' + error.message);
+                });
+        }
+
+        // Show loading indicator
+        function showLoading() {
+            const contentWrapper = document.querySelector('.main-panel .content-wrapper');
+            if (contentWrapper) {
+                contentWrapper.innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Đang tải...</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Hide loading indicator
+        function hideLoading() {
+            const contentWrapper = document.querySelector('.main-panel .content-wrapper') ||
+                                 document.querySelector('.content-wrapper') ||
+                                 document.querySelector('.main-panel');
+            
+            if (contentWrapper) {
+                // Remove loading spinner if it exists
+                const loadingSpinner = contentWrapper.querySelector('.spinner-border');
+                if (loadingSpinner) {
+                    loadingSpinner.remove();
+                }
+                console.log('Loading indicator hidden');
+            }
+        }
+
+        // Execute JavaScript from loaded content
+        function executeScripts(contentElement) {
+            const scripts = contentElement.querySelectorAll('script');
+            scripts.forEach(script => {
+                const newScript = document.createElement('script');
+                
+                // Copy script attributes
+                Array.from(script.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                
+                // Copy script content
+                if (script.src) {
+                    newScript.src = script.src;
+                } else {
+                    newScript.textContent = script.textContent;
+                }
+                
+                // Append to head to execute
+                document.head.appendChild(newScript);
+                
+                // Remove after execution to avoid duplicates
+                setTimeout(() => {
+                    if (newScript.parentNode) {
+                        newScript.parentNode.removeChild(newScript);
+                    }
+                }, 100);
+            });
+            
+            // Re-initialize common functionality after AJAX load
+            setTimeout(() => {
+                initializeCommonFeatures();
+                initializePageSpecificFeatures();
+            }, 200);
+        }
+        
+        // Initialize page-specific features based on current page
+        function initializePageSpecificFeatures() {
+            const currentUrl = window.location.pathname;
+            console.log('Initializing page-specific features for:', currentUrl);
+            
+            // Product Index page
+            if (currentUrl.includes('/Admin/Product') || currentUrl.includes('/Product/Index')) {
+                initializeProductIndexFeatures();
+            }
+            
+            // TourDay Index page
+            if (currentUrl.includes('/Admin/TourDay') || currentUrl.includes('/TourDay/Index')) {
+                initializeTourDayIndexFeatures();
+            }
+            
+            // Account Index page
+            if (currentUrl.includes('/Admin/Account') || currentUrl.includes('/Account/Index')) {
+                initializeAccountIndexFeatures();
+            }
+            
+            // Add more page-specific initializations as needed
+        }
+        
+        // Initialize Product Index page features
+        function initializeProductIndexFeatures() {
+            console.log('Initializing Product Index features');
+            
+            // Re-initialize search functionality
+            const searchBtn = document.getElementById('searchBtn');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const fromDate = document.getElementById('fromDate');
+            const toDate = document.getElementById('toDate');
+            const searchName = document.getElementById('searchName');
+            
+            if (searchBtn) {
+                // Remove existing event listeners
+                searchBtn.removeEventListener('click', performProductSearch);
+                // Add new event listener
+                searchBtn.addEventListener('click', performProductSearch);
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.removeEventListener('change', performProductSearch);
+                categoryFilter.addEventListener('change', performProductSearch);
+            }
+            
+            if (fromDate) {
+                fromDate.removeEventListener('change', performProductSearch);
+                fromDate.addEventListener('change', performProductSearch);
+            }
+            
+            if (toDate) {
+                toDate.removeEventListener('change', performProductSearch);
+                toDate.addEventListener('change', performProductSearch);
+            }
+            
+            if (searchName) {
+                searchName.removeEventListener('keypress', handleProductSearchKeypress);
+                searchName.addEventListener('keypress', handleProductSearchKeypress);
+            }
+            
+            // Re-initialize tooltips
+            initializeTooltips();
+        }
+        
+        // Product search function
+        function performProductSearch() {
+            const searchName = document.getElementById('searchName')?.value || '';
+            const categoryId = document.getElementById('categoryFilter')?.value || '';
+            const fromDate = document.getElementById('fromDate')?.value || '';
+            const toDate = document.getElementById('toDate')?.value || '';
+
+            const params = new URLSearchParams();
+            if (searchName) params.append('searchName', searchName);
+            if (categoryId) params.append('categoryId', categoryId);
+            if (fromDate) params.append('fromDate', fromDate);
+            if (toDate) params.append('toDate', toDate);
+
+            // Show loading
+            const container = document.getElementById('productTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                // Get current URL and add parameters
+                const currentUrl = window.location.pathname;
+                const searchUrl = currentUrl + '?' + params.toString();
+                
+                fetch(searchUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // Parse the response to extract only the table content
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const tableContainer = doc.querySelector('#productTableContainer');
+                        
+                        if (tableContainer) {
+                            container.innerHTML = tableContainer.innerHTML;
+                            
+                            // Re-initialize tooltips
+                            initializeTooltips();
+                        } else {
+                            container.innerHTML = '<div class="alert alert-warning">Không tìm thấy kết quả nào</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        container.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tìm kiếm</div>';
+                    });
+            }
+        }
+        
+        // Handle product search keypress
+        function handleProductSearchKeypress(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performProductSearch();
+            }
+        }
+        
+        // Initialize TourDay Index page features
+        function initializeTourDayIndexFeatures() {
+            console.log('Initializing TourDay Index features');
+            
+            // Re-initialize search functionality
+            const searchBtn = document.getElementById('searchBtn');
+            const searchName = document.getElementById('searchName');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const productFilter = document.getElementById('productFilter');
+            const dayNumberFilter = document.getElementById('dayNumberFilter');
+            
+            if (searchBtn) {
+                searchBtn.removeEventListener('click', performTourDaySearch);
+                searchBtn.addEventListener('click', performTourDaySearch);
+            }
+            
+            if (searchName) {
+                searchName.removeEventListener('keypress', handleTourDaySearchKeypress);
+                searchName.addEventListener('keypress', handleTourDaySearchKeypress);
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.removeEventListener('change', performTourDaySearch);
+                categoryFilter.addEventListener('change', performTourDaySearch);
+            }
+            
+            if (productFilter) {
+                productFilter.removeEventListener('change', performTourDaySearch);
+                productFilter.addEventListener('change', performTourDaySearch);
+            }
+            
+            if (dayNumberFilter) {
+                dayNumberFilter.removeEventListener('keypress', handleTourDaySearchKeypress);
+                dayNumberFilter.addEventListener('keypress', handleTourDaySearchKeypress);
+            }
+            
+            initializeTooltips();
+        }
+        
+        // TourDay search function
+        function performTourDaySearch() {
+            const searchName = document.getElementById('searchName')?.value || '';
+            const categoryId = document.getElementById('categoryFilter')?.value || '';
+            const productId = document.getElementById('productFilter')?.value || '';
+            const dayNumber = document.getElementById('dayNumberFilter')?.value || '';
+            
+            const params = new URLSearchParams();
+            if (searchName) params.append('searchName', searchName);
+            if (categoryId) params.append('categoryId', categoryId);
+            if (productId) params.append('productId', productId);
+            if (dayNumber) params.append('dayNumber', dayNumber);
+
+            const container = document.getElementById('tourDayTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                const currentUrl = window.location.pathname;
+                const searchUrl = currentUrl + '?' + params.toString();
+                
+                fetch(searchUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const tableContainer = doc.querySelector('#tourDayTableContainer');
+                        
+                        if (tableContainer) {
+                            container.innerHTML = tableContainer.innerHTML;
+                            initializeTooltips();
+                        } else {
+                            container.innerHTML = '<div class="alert alert-warning">Không tìm thấy kết quả nào</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        container.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tìm kiếm</div>';
+                    });
+            }
+        }
+        
+        // Handle TourDay search keypress
+        function handleTourDaySearchKeypress(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performTourDaySearch();
+            }
+        }
+        
+        // Initialize Account Index page features
+        function initializeAccountIndexFeatures() {
+            console.log('Initializing Account Index features');
+            
+            // Re-initialize search functionality
+            const searchBtn = document.getElementById('searchBtn');
+            const searchName = document.getElementById('searchName');
+            const searchAddress = document.getElementById('searchAddress');
+            const roleFilter = document.getElementById('roleFilter');
+            
+            if (searchBtn) {
+                searchBtn.removeEventListener('click', performAccountSearch);
+                searchBtn.addEventListener('click', performAccountSearch);
+            }
+            
+            if (searchName) {
+                searchName.removeEventListener('keypress', handleAccountSearchKeypress);
+                searchName.addEventListener('keypress', handleAccountSearchKeypress);
+            }
+            
+            if (searchAddress) {
+                searchAddress.removeEventListener('keypress', handleAccountSearchKeypress);
+                searchAddress.addEventListener('keypress', handleAccountSearchKeypress);
+            }
+            
+            if (roleFilter) {
+                roleFilter.removeEventListener('change', performAccountSearch);
+                roleFilter.addEventListener('change', performAccountSearch);
+            }
+            
+            initializeTooltips();
+        }
+        
+        // Account search function
+        function performAccountSearch() {
+            const searchName = document.getElementById('searchName')?.value || '';
+            const searchAddress = document.getElementById('searchAddress')?.value || '';
+            const roleFilter = document.getElementById('roleFilter')?.value || '';
+            
+            const params = new URLSearchParams();
+            if (searchName) params.append('searchName', searchName);
+            if (searchAddress) params.append('searchAddress', searchAddress);
+            if (roleFilter) params.append('roleFilter', roleFilter);
+
+            const container = document.getElementById('userTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                const currentUrl = window.location.pathname;
+                const searchUrl = currentUrl + '?' + params.toString();
+                
+                fetch(searchUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const tableContainer = doc.querySelector('#userTableContainer');
+                        
+                        if (tableContainer) {
+                            container.innerHTML = tableContainer.innerHTML;
+                            initializeTooltips();
+                        } else {
+                            container.innerHTML = '<div class="alert alert-warning">Không tìm thấy kết quả nào</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        container.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tìm kiếm</div>';
+                    });
+            }
+        }
+        
+        // Handle Account search keypress
+        function handleAccountSearchKeypress(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performAccountSearch();
+            }
+        }
+        
+        // Initialize common features that need to be re-run after AJAX load
+        function initializeCommonFeatures() {
+            console.log('Initializing common features after AJAX load');
+            
+            // Re-initialize search forms
+            initializeSearchForms();
+            
+            // Re-initialize data tables
+            initializeDataTables();
+            
+            // Re-initialize modals
+            initializeModals();
+            
+            // Re-initialize tooltips and popovers
+            initializeTooltips();
+            
+            // Re-initialize any other common features
+            initializeOtherFeatures();
+        }
+        
+        // Initialize search forms
+        function initializeSearchForms() {
+            // Re-attach search form event listeners
+            const searchForms = document.querySelectorAll('form[action*="Search"], form[onsubmit*="validateSearchForm"]');
+            searchForms.forEach(form => {
+                // Remove existing event listeners
+                form.removeEventListener('submit', handleSearchSubmit);
+                // Add new event listener
+                form.addEventListener('submit', handleSearchSubmit);
+            });
+            
+            // Re-attach search input event listeners
+            const searchInputs = document.querySelectorAll('input[type="search"], input[name*="search"], input[id*="search"]');
+            searchInputs.forEach(input => {
+                // Remove existing event listeners
+                input.removeEventListener('keyup', handleSearchInput);
+                input.removeEventListener('change', handleSearchInput);
+                // Add new event listeners
+                input.addEventListener('keyup', handleSearchInput);
+                input.addEventListener('change', handleSearchInput);
+            });
+        }
+        
+        // Handle search form submission
+        function handleSearchSubmit(event) {
+            const form = event.target;
+            const searchInput = form.querySelector('input[type="search"], input[name*="search"], input[id*="search"]');
+            
+            if (searchInput && searchInput.value.trim() === '') {
+                event.preventDefault();
+                alert('Vui lòng nhập từ khóa tìm kiếm');
+                return false;
+            }
+            
+            // If it's a search form, use AJAX to load results
+            if (form.action && form.action.includes('Search')) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const url = new URL(form.action, window.location.origin);
+                
+                // Add form data to URL
+                for (let [key, value] of formData.entries()) {
+                    url.searchParams.append(key, value);
+                }
+                
+                // Load search results via AJAX
+                loadPage(url.toString(), 'Kết quả tìm kiếm');
+                return false;
+            }
+        }
+        
+        // Handle search input changes
+        function handleSearchInput(event) {
+            const input = event.target;
+            const form = input.closest('form');
+            
+            // Auto-submit search form after 1 second of no typing
+            clearTimeout(input.searchTimeout);
+            input.searchTimeout = setTimeout(() => {
+                if (form && form.action && form.action.includes('Search')) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }, 1000);
+        }
+        
+        // Initialize data tables
+        function initializeDataTables() {
+            // Re-initialize any data table functionality
+            const tables = document.querySelectorAll('table[data-search], table[data-filter]');
+            tables.forEach(table => {
+                // Add table search/filter functionality if needed
+                addTableSearchFunctionality(table);
+            });
+        }
+        
+        // Add table search functionality
+        function addTableSearchFunctionality(table) {
+            const searchInput = table.querySelector('input[type="search"], input[name*="search"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const rows = table.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        }
+        
+        // Initialize modals
+        function initializeModals() {
+            // Re-initialize Bootstrap modals
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                // Remove existing event listeners
+                modal.removeEventListener('show.bs.modal', handleModalShow);
+                modal.removeEventListener('hide.bs.modal', handleModalHide);
+                // Add new event listeners
+                modal.addEventListener('show.bs.modal', handleModalShow);
+                modal.addEventListener('hide.bs.modal', handleModalHide);
+            });
+        }
+        
+        // Handle modal show
+        function handleModalShow(event) {
+            console.log('Modal shown:', event.target);
+        }
+        
+        // Handle modal hide
+        function handleModalHide(event) {
+            console.log('Modal hidden:', event.target);
+        }
+        
+        // Initialize tooltips
+        function initializeTooltips() {
+            // Re-initialize Bootstrap tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+        
+        // Initialize other features
+        function initializeOtherFeatures() {
+            // Re-initialize any other features that need to be re-run
+            console.log('Initializing other features');
+            
+            // Re-initialize any custom event listeners
+            initializeCustomEventListeners();
+            
+            // Re-initialize admin-specific features
+            initializeAdminFeatures();
+        }
+        
+        // Initialize admin-specific features
+        function initializeAdminFeatures() {
+            // Re-initialize search functionality for admin pages
+            initializeAdminSearch();
+            
+            // Re-initialize filter functionality
+            initializeAdminFilters();
+            
+            // Re-initialize pagination
+            initializeAdminPagination();
+        }
+        
+        // Initialize admin search functionality
+        function initializeAdminSearch() {
+            // Handle search forms in admin pages
+            const searchForms = document.querySelectorAll('form[method="get"], form[action*="Index"]');
+            searchForms.forEach(form => {
+                // Remove existing event listeners
+                form.removeEventListener('submit', handleAdminSearchSubmit);
+                // Add new event listener
+                form.addEventListener('submit', handleAdminSearchSubmit);
+            });
+            
+            // Handle search inputs
+            const searchInputs = document.querySelectorAll('input[name="searchQuery"], input[name="query"], input[placeholder*="tìm kiếm"]');
+            searchInputs.forEach(input => {
+                // Remove existing event listeners
+                input.removeEventListener('input', handleAdminSearchInput);
+                input.removeEventListener('keyup', handleAdminSearchInput);
+                // Add new event listeners
+                input.addEventListener('input', handleAdminSearchInput);
+                input.addEventListener('keyup', handleAdminSearchInput);
+            });
+        }
+        
+        // Handle admin search form submission
+        function handleAdminSearchSubmit(event) {
+            const form = event.target;
+            const searchInput = form.querySelector('input[name="searchQuery"], input[name="query"], input[placeholder*="tìm kiếm"]');
+            
+            if (searchInput && searchInput.value.trim() === '') {
+                event.preventDefault();
+                return false;
+            }
+            
+            // Use AJAX to load search results
+            event.preventDefault();
+            const formData = new FormData(form);
+            const url = new URL(form.action, window.location.origin);
+            
+            // Add form data to URL
+            for (let [key, value] of formData.entries()) {
+                if (value) {
+                    url.searchParams.append(key, value);
+                }
+            }
+            
+            // Load search results via AJAX
+            loadPage(url.toString(), 'Kết quả tìm kiếm');
+            return false;
+        }
+        
+        // Handle admin search input changes
+        function handleAdminSearchInput(event) {
+            const input = event.target;
+            const form = input.closest('form');
+            
+            // Auto-submit search form after 1 second of no typing
+            clearTimeout(input.searchTimeout);
+            input.searchTimeout = setTimeout(() => {
+                if (form) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }, 1000);
+        }
+        
+        // Initialize admin filters
+        function initializeAdminFilters() {
+            // Handle filter dropdowns
+            const filterSelects = document.querySelectorAll('select[name*="filter"], select[name*="category"], select[name*="region"]');
+            filterSelects.forEach(select => {
+                // Remove existing event listeners
+                select.removeEventListener('change', handleAdminFilterChange);
+                // Add new event listener
+                select.addEventListener('change', handleAdminFilterChange);
+            });
+            
+            // Handle date inputs
+            const dateInputs = document.querySelectorAll('input[type="date"], input[name*="date"]');
+            dateInputs.forEach(input => {
+                // Remove existing event listeners
+                input.removeEventListener('change', handleAdminFilterChange);
+                // Add new event listener
+                input.addEventListener('change', handleAdminFilterChange);
+            });
+        }
+        
+        // Handle admin filter changes
+        function handleAdminFilterChange(event) {
+            const input = event.target;
+            const form = input.closest('form');
+            
+            if (form) {
+                // Auto-submit filter form
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+        
+        // Initialize admin pagination
+        function initializeAdminPagination() {
+            // Handle pagination links
+            const paginationLinks = document.querySelectorAll('.pagination a, .page-link');
+            paginationLinks.forEach(link => {
+                // Remove existing event listeners
+                link.removeEventListener('click', handleAdminPaginationClick);
+                // Add new event listener
+                link.addEventListener('click', handleAdminPaginationClick);
+            });
+        }
+        
+        // Handle admin pagination clicks
+        function handleAdminPaginationClick(event) {
+            const link = event.target.closest('a');
+            if (link && link.href) {
+                event.preventDefault();
+                // Load page via AJAX
+                loadPage(link.href, 'Danh sách');
+                return false;
+            }
+        }
+        
+        // Initialize custom event listeners
+        function initializeCustomEventListeners() {
+            // Re-attach any custom event listeners that might have been lost
+            const buttons = document.querySelectorAll('button[onclick*="search"], button[onclick*="filter"]');
+            buttons.forEach(button => {
+                // Remove existing event listeners
+                button.removeEventListener('click', handleCustomButtonClick);
+                // Add new event listener
+                button.addEventListener('click', handleCustomButtonClick);
+            });
+        }
+        
+        // Handle custom button clicks
+        function handleCustomButtonClick(event) {
+            const button = event.target;
+            const onclick = button.getAttribute('onclick');
+            
+            if (onclick && onclick.includes('search')) {
+                // Handle search button clicks
+                console.log('Search button clicked');
+            }
+        }
+
+        // Update active menu item
+        function updateActiveMenuItem(url) {
+            // Remove active class from all menu items
+            document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the matching menu item
+            const menuLinks = document.querySelectorAll('.sidebar .nav-link');
+            menuLinks.forEach(link => {
+                if (link.getAttribute('href') === url || link.getAttribute('onclick')?.includes(url)) {
+                    const navItem = link.closest('.nav-item');
+                    if (navItem) {
+                        navItem.classList.add('active');
+                        
+                        // If it's a submenu item, also open the parent submenu
+                        const parentSubmenu = navItem.closest('.nav-item.has-submenu');
+                        if (parentSubmenu) {
+                            parentSubmenu.classList.add('active');
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load page with fallback to normal navigation
+        function loadPageWithFallback(url, title, element) {
+            event.preventDefault();
+            
+            try {
+                loadPage(url, title);
+            } catch (error) {
+                console.error('AJAX failed, falling back to normal navigation:', error);
+                window.location.href = url;
+            }
+            
+            return false;
+        }
+
+        // Make functions globally available
+        window.toggleSubmenu = toggleSubmenu;
+        window.loadPage = loadPage;
+        window.loadPageWithFallback = loadPageWithFallback;
+        window.handleSubmenuItemClick = handleSubmenuItemClick;
+    </script>
+
+    <script>
+    function validateSearchForm() {
+        var query = document.getElementById('searchQuery').value;
+        if (query.trim() === '') {
+            return false; // Không gửi biểu mẫu nếu ô tìm kiếm trống
+        }
+        return true; // Gửi biểu mẫu nếu ô tìm kiếm không trống
+    }
+
+
+    // Force remove white backgrounds from sidebar and add click highlight
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clean header design
+        const brandWrapper = document.querySelector('.navbar-brand-wrapper');
+        if (brandWrapper) {
+            brandWrapper.style.background = '#2c3e50';
+            brandWrapper.style.backgroundColor = '#2c3e50';
+            brandWrapper.style.backgroundImage = 'none';
+            brandWrapper.style.boxShadow = 'none';
+            brandWrapper.style.borderRight = '1px solid #34495e';
+            brandWrapper.style.minWidth = '180px';
+        }
+        
+        // Clean navbar background
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            navbar.style.background = '#2c3e50';
+            navbar.style.backgroundColor = '#2c3e50';
+            navbar.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            navbar.style.borderBottom = '1px solid #34495e';
+            navbar.style.transition = 'none';
+            navbar.style.animation = 'none';
+        }
+        
+        // Remove animations from all header elements
+        const headerElements = document.querySelectorAll('.navbar, .navbar *, .navbar-brand-wrapper, .navbar-brand-wrapper *, .navbar-menu-wrapper, .navbar-menu-wrapper *, .navbar-nav, .navbar-nav *, .navbar-toggler, .navbar-toggler *, .dropdown-menu, .dropdown-menu *, .navbar-dropdown, .navbar-dropdown *');
+        headerElements.forEach(element => {
+            element.style.transition = 'none';
+            element.style.animation = 'none';
+            element.style.transform = 'none';
+        });
+        
+        // Force change text colors in header
+        const brandText = document.querySelector('.brand-text');
+        if (brandText) {
+            brandText.style.color = '#fff';
+        }
+        
+        const brandSubtitle = document.querySelector('.brand-subtitle');
+        if (brandSubtitle) {
+            brandSubtitle.style.color = '#ecf0f1';
+        }
+        
+        
+        const countIndicator = document.querySelector('.count-indicator');
+        if (countIndicator) {
+            countIndicator.style.background = 'transparent';
+            countIndicator.style.backgroundColor = 'transparent';
+        }
+        
+        const navProfile = document.querySelector('.nav-profile');
+        if (navProfile) {
+            navProfile.style.background = 'transparent';
+            navProfile.style.backgroundColor = 'transparent';
+        }
+        
+        // Fix dropdown positioning
+        const dropdownMenus = document.querySelectorAll('.dropdown-menu, .navbar-dropdown');
+        dropdownMenus.forEach(menu => {
+            menu.style.marginTop = '0px';
+            menu.style.top = '100%';
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+            menu.style.transform = 'none';
+            menu.style.transition = 'none';
+            menu.style.animation = 'none';
+            menu.style.borderTop = 'none';
+        });
+        
+        // Fix dropdown item text colors
+        const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item, .navbar-dropdown .dropdown-item');
+        dropdownItems.forEach(item => {
+            item.style.color = '#333';
+            item.style.background = 'transparent';
+            item.style.transition = 'none';
+            item.style.animation = 'none';
+            
+            // Add hover event listener
+            item.addEventListener('mouseenter', function() {
+                this.style.color = '#333';
+                this.style.background = '#f8f9fa';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.color = '#333';
+                this.style.background = 'transparent';
+            });
+        });
+        
+        // Force fix sidebar alignment
+        const sidebarLinks = document.querySelectorAll('.sidebar .nav-item .nav-link');
+        sidebarLinks.forEach(link => {
+            link.style.justifyContent = 'flex-start';
+            link.style.textAlign = 'left';
+            link.style.margin = '2px 0';
+            link.style.padding = '12px 20px';
+            link.style.display = 'flex';
+            link.style.alignItems = 'center';
+            link.style.width = '100%';
+            link.style.boxSizing = 'border-box';
+        });
+        
+        // Force show all menu icons
+        const menuIcons = document.querySelectorAll('.sidebar .nav-item .nav-link .menu-icon');
+        menuIcons.forEach(icon => {
+            icon.style.display = 'inline-block';
+            icon.style.fontSize = '1.2rem';
+            icon.style.color = '#ecf0f1';
+            icon.style.marginRight = '10px';
+            icon.style.width = '20px';
+            icon.style.textAlign = 'center';
+            icon.style.flexShrink = '0';
+        });
+        
+        // Fix submenu alignment
+        const submenuLinks = document.querySelectorAll('.sidebar .nav-item.has-submenu .submenu .nav-link');
+        submenuLinks.forEach(link => {
+            link.style.justifyContent = 'flex-start';
+            link.style.textAlign = 'left';
+            link.style.margin = '2px 0';
+            link.style.padding = '8px 20px';
+            link.style.display = 'flex';
+            link.style.alignItems = 'center';
+            link.style.marginLeft = '0';
+            link.style.marginRight = '0';
+        });
+        
+        // Remove duplicate event listeners to prevent flickering
+        const submenuToggles = document.querySelectorAll('.sidebar .nav-item.has-submenu > .nav-link');
+        submenuToggles.forEach(toggle => {
+            // Remove any existing event listeners
+            toggle.removeEventListener('click', toggleSubmenu);
+            // Don't add new event listeners - let onclick handle it
+        });
+        
+        // Target all nav-links
+        const sidebarLinks = document.querySelectorAll('.sidebar .nav .nav-item .nav-link');
+        sidebarLinks.forEach(link => {
+            link.style.background = 'transparent';
+            link.style.backgroundColor = 'transparent';
+            link.style.backgroundImage = 'none';
+            link.style.color = '#ecf0f1';
+            
+            // Add click event to highlight active tab
+            link.addEventListener('click', function() {
+                // Remove active class from all nav-items
+                const allNavItems = document.querySelectorAll('.sidebar .nav .nav-item');
+                allNavItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Add active class to clicked item's parent
+                const parentNavItem = this.closest('.nav-item');
+                if (parentNavItem) {
+                    parentNavItem.classList.add('active');
+                }
+            });
+        });
+        
+        // Force override any existing styles for non-active items
+        const allNavItems = document.querySelectorAll('.sidebar .nav .nav-item:not(.active)');
+        allNavItems.forEach(item => {
+            item.style.background = 'transparent';
+            item.style.backgroundColor = 'transparent';
+            item.style.backgroundImage = 'none';
+        });
+    });
+</script>
+
+<style>
+/* Force remove ALL white backgrounds from sidebar */
+.sidebar .nav .nav-item .nav-link,
+.sidebar .nav .nav-item .nav-link.active,
+.sidebar .nav .nav-item .nav-link:hover,
+.sidebar .nav .nav-item.active .nav-link,
+.sidebar .nav .nav-item .nav-link.active:hover,
+.sidebar .nav .nav-item .nav-link:hover.active {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #ecf0f1 !important;
+    box-shadow: none !important;
+}
+
+/* Override any existing styles */
+.sidebar .nav .nav-item .nav-link *,
+.sidebar .nav .nav-item .nav-link.active *,
+.sidebar .nav .nav-item .nav-link:hover *,
+.sidebar .nav .nav-item.active .nav-link * {
+    color: #ecf0f1 !important;
+}
+
+/* Specific overrides for all possible selectors */
+#sidebar .nav .nav-item .nav-link,
+#sidebar .nav .nav-item .nav-link.active,
+#sidebar .nav .nav-item .nav-link:hover,
+#sidebar .nav .nav-item.active .nav-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #ecf0f1 !important;
+}
+
+/* Override any template styles */
+body .sidebar .nav .nav-item .nav-link,
+body .sidebar .nav .nav-item .nav-link.active,
+body .sidebar .nav .nav-item .nav-link:hover,
+body .sidebar .nav .nav-item.active .nav-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #ecf0f1 !important;
+}
+
+/* Remove any white backgrounds completely */
+.sidebar .nav .nav-item .nav-link[style*="background"],
+.sidebar .nav .nav-item .nav-link[style*="background-color"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Override the specific rule from _sidebar.scss */
+.sidebar .nav .nav-item.active {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Force override with maximum specificity */
+.sidebar .nav .nav-item.active .nav-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #ecf0f1 !important;
+}
+
+/* Override any parent background */
+.sidebar .nav .nav-item.active,
+.sidebar .nav .nav-item.active .nav-link,
+.sidebar .nav .nav-item.active .nav-link * {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #ecf0f1 !important;
+}
+
+/* Clean menu items - no highlights */
+.sidebar .nav .nav-item.active {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transition: none !important;
+}
+
+.sidebar .nav .nav-item.active .nav-link {
+    background: transparent !important;
+    color: #fff !important;
+    font-weight: normal !important;
+    padding-left: 20px !important;
+}
+
+.sidebar .nav .nav-item.active .nav-link .menu-icon {
+    color: #fff !important;
+    font-size: 1.2rem !important;
+}
+
+.sidebar .nav .nav-item.active .nav-link .menu-title {
+    color: #fff !important;
+    font-weight: normal !important;
+}
+
+/* Hover effect for non-active items - minimal */
+.sidebar .nav .nav-item:not(.active):hover {
+    background: transparent !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+.sidebar .nav .nav-item:not(.active):hover .nav-link {
+    color: #fff !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Clean header design - consistent blue theme */
+body .navbar-brand-wrapper,
+body .default-layout-navbar .navbar-brand-wrapper,
+.navbar-brand-wrapper {
+    background: #2c3e50 !important;
+    background-color: #2c3e50 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-right: 1px solid #34495e !important;
+    min-width: 180px !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Hide logo when sidebar is minimized - completely remove from layout */
+body.sidebar-minimized .navbar-brand-wrapper,
+body.sidebar-icon-only .navbar-brand-wrapper,
+.sidebar-minimized .navbar-brand-wrapper,
+.sidebar-icon-only .navbar-brand-wrapper {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+.sidebar-minimized .navbar-brand {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.sidebar-minimized .brand-logo {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.sidebar-minimized .brand-logo-content {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.sidebar-minimized .brand-subtitle {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Expand navbar menu wrapper when logo is hidden */
+body.sidebar-minimized .navbar-menu-wrapper,
+body.sidebar-icon-only .navbar-menu-wrapper,
+.sidebar-minimized .navbar-menu-wrapper,
+.sidebar-icon-only .navbar-menu-wrapper {
+    flex: 1 !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* Change main navbar background to clean blue */
+body .navbar,
+body .default-layout-navbar,
+.navbar {
+    background: #2c3e50 !important;
+    background-color: #2c3e50 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    border-bottom: 1px solid #34495e !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+body .brand-logo-content,
+body .default-layout-navbar .brand-logo-content,
+.brand-logo-content {
+    color: #fff !important;
+    background: transparent !important;
+}
+
+body .brand-text,
+body .default-layout-navbar .brand-text,
+.brand-text {
+    color: #fff !important;
+}
+
+body .brand-subtitle,
+body .default-layout-navbar .brand-subtitle,
+.brand-subtitle {
+    color: #ecf0f1 !important;
+}
+
+/* Change text colors in header to white */
+body .navbar-nav .nav-link,
+body .navbar-nav .nav-item,
+body .navbar-nav .nav-text,
+.navbar-nav .nav-link,
+.navbar-nav .nav-item,
+.navbar-nav .nav-text {
+    color: #fff !important;
+}
+
+
+/* Clean notification and profile design - no background */
+body .count-indicator,
+.count-indicator {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: #fff !important;
+}
+
+body .nav-profile,
+.nav-profile {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: #fff !important;
+}
+
+body .nav-profile-text p,
+.nav-profile-text p {
+    color: #fff !important;
+}
+
+/* Fix dropdown positioning - make it closer */
+body .dropdown-menu,
+.dropdown-menu {
+    margin-top: 0px !important;
+    top: 100% !important;
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    border-top: none !important;
+}
+
+body .navbar-dropdown,
+.navbar-dropdown {
+    margin-top: 0px !important;
+    top: 100% !important;
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    border-top: none !important;
+}
+
+/* Fix dropdown item text colors */
+body .dropdown-menu .dropdown-item,
+.dropdown-menu .dropdown-item {
+    color: #333 !important;
+    background: transparent !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+body .dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:hover {
+    color: #333 !important;
+    background: #f8f9fa !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+body .dropdown-menu .dropdown-item:focus,
+.dropdown-menu .dropdown-item:focus {
+    color: #333 !important;
+    background: #f8f9fa !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+body .dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item.active {
+    color: #333 !important;
+    background: #e9ecef !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Remove all borders from header elements */
+body .count-indicator *,
+body .nav-profile *,
+.count-indicator *,
+.nav-profile * {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Force override any inline styles */
+.navbar-brand-wrapper[style] {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Submenu Styles - Clean without highlights and animations */
+.sidebar .nav-item.has-submenu .submenu {
+    display: none !important;
+    padding-left: 20px;
+    background: transparent;
+    border-left: none;
+    margin-left: 0;
+    border-radius: 0;
+    list-style: none;
+    transition: none !important;
+    animation: none !important;
+}
+
+.sidebar .nav-item.has-submenu .submenu li {
+    list-style: none;
+}
+
+.sidebar .nav-item.has-submenu.active .submenu {
+    display: block !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+.sidebar .nav-item.has-submenu .submenu .nav-link {
+    padding: 8px 15px;
+    margin: 2px 0;
+    font-size: 0.9rem;
+    color: #bdc3c7 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.sidebar .nav-item.has-submenu .submenu .nav-link:hover {
+    background: transparent !important;
+    color: #fff !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+.sidebar .nav-item.has-submenu .submenu .nav-link.active {
+    background: transparent !important;
+    color: #fff !important;
+    border: none !important;
+    padding-left: 15px;
+}
+
+/* Submenu arrow rotation */
+.sidebar .nav-item.has-submenu .submenu-arrow {
+    transition: none !important;
+    animation: none !important;
+}
+
+.sidebar .nav-item.has-submenu.active .submenu-arrow {
+    transform: rotate(180deg);
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Parent menu item styling - Clean */
+.sidebar .nav-item.has-submenu .nav-link {
+    cursor: pointer;
+    position: relative;
+    background: transparent !important;
+    border: none !important;
+}
+
+.sidebar .nav-item.has-submenu .nav-link:hover {
+    background: transparent !important;
+    color: #fff !important;
+}
+
+.sidebar .nav-item.has-submenu.active .nav-link {
+    background: transparent !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+/* Remove all bullet points */
+.sidebar .nav,
+.sidebar .nav ul,
+.sidebar .nav li {
+    list-style: none !important;
+}
+
+.sidebar .nav-item {
+    list-style: none !important;
+}
+
+/* Fix alignment - left align all menu items */
+.sidebar .nav-item .nav-link {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    margin: 2px 0 !important;
+    padding: 12px 20px !important;
+}
+
+.sidebar .nav-item.has-submenu .submenu .nav-link {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    margin: 2px 0 !important;
+    padding: 8px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure consistent spacing */
+.sidebar .nav {
+    padding: 0 !important;
+}
+
+.sidebar .nav-item {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Force override all existing styles with maximum specificity */
+body .sidebar .nav .nav-item .nav-link,
+body .sidebar .nav .nav-item.has-submenu .nav-link,
+body .sidebar .nav .nav-item.has-submenu .submenu .nav-link {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    margin: 2px 0 !important;
+    padding: 12px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Remove ALL animations from sidebar */
+.sidebar,
+.sidebar *,
+.sidebar .nav,
+.sidebar .nav *,
+.sidebar .nav-item,
+.sidebar .nav-item *,
+.sidebar .nav-link,
+.sidebar .nav-link *,
+.sidebar .submenu,
+.sidebar .submenu * {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Remove ALL animations from header */
+.navbar,
+.navbar *,
+.navbar-brand-wrapper,
+.navbar-brand-wrapper *,
+.navbar-menu-wrapper,
+.navbar-menu-wrapper *,
+.navbar-nav,
+.navbar-nav *,
+.navbar-toggler,
+.navbar-toggler *,
+.dropdown-menu,
+.dropdown-menu *,
+.navbar-dropdown,
+.navbar-dropdown * {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Specific override for submenu items */
+body .sidebar .nav .nav-item.has-submenu .submenu .nav-link {
+    padding: 8px 20px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Override any existing flexbox properties */
+.sidebar .nav-item .nav-link * {
+    margin: 0 !important;
+    padding-top: 15px !important;
+}
+
+.sidebar .nav-item .nav-link .menu-icon {
+    margin-right: 10px !important;
+    flex-shrink: 0 !important;
+    font-size: 1.2rem !important;
+    color: #ecf0f1 !important;
+    display: inline-block !important;
+    width: 20px !important;
+    text-align: center !important;
+}
+
+.sidebar .nav-item .nav-link .menu-title {
+    flex: 1 !important;
+    text-align: left !important;
+}
+
+.sidebar .nav-item .nav-link .submenu-arrow {
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+}
+</style>
+
+</body>
+</html>

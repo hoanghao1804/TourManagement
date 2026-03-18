@@ -1,0 +1,119 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Đăng Ký Tài Khoản";
+    Layout = "~/Areas/Identity/Pages/Shared/_AuthLayout.cshtml";
+}
+
+@section AuthImageContent {
+    <h2>JOIN US</h2>
+    <p>Tạo tài khoản để khám phá những chuyến du lịch tuyệt vời cùng SAIGON GLISTEN. Đăng ký ngay để trải nghiệm dịch vụ tốt nhất.</p>
+}
+
+<h2 class="form-title">ĐĂNG KÝ</h2>
+<p class="form-subtitle">Tạo tài khoản mới để bắt đầu hành trình du lịch</p>
+
+<form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+    
+    <div class="form-group">
+        <input asp-for="Input.FullName" class="form-control" autocomplete="fullname" aria-required="true" placeholder="Họ và tên" />
+        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Email" />
+        <span asp-validation-for="Input.Email" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <div class="password-input-wrapper">
+            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Mật khẩu" id="passwordInput" />
+            <button type="button" class="password-toggle" onclick="togglePassword()">
+                <i class="fas fa-eye" id="toggleIcon"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Input.Password" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <div class="password-input-wrapper">
+            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Xác nhận mật khẩu" id="confirmPasswordInput" />
+            <button type="button" class="password-toggle" onclick="toggleConfirmPassword()">
+                <i class="fas fa-eye" id="toggleConfirmIcon"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <select asp-for="Input.Role" asp-items="@Model.Input.RoleList" class="form-control">
+            <option disabled selected>- Chọn vai trò -</option>
+        </select>
+        <span asp-validation-for="Input.Role" class="text-danger"></span>
+    </div>
+
+    <button id="registerSubmit" type="submit" class="btn btn-auth">
+        ĐĂNG KÝ NGAY
+    </button>
+</form>
+
+<div class="divider">
+    Hoặc đăng nhập bằng
+</div>
+
+<form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+    <div class="social-login">
+        <button type="submit" class="btn btn-social btn-google" name="provider" value="Google">
+            <i class="fab fa-google"></i>
+            <span>Google</span>
+        </button>
+        <button type="submit" class="btn btn-social btn-facebook" name="provider" value="Facebook">
+            <i class="fab fa-facebook-f"></i>
+            <span>Facebook</span>
+        </button>
+        <button type="submit" class="btn btn-social btn-github" name="provider" value="GitHub">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+        </button>
+    </div>
+</form>
+
+<div class="auth-links">
+    Đã có tài khoản? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Đăng nhập ngay</a>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        function toggleConfirmPassword() {
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const toggleConfirmIcon = document.getElementById('toggleConfirmIcon');
+            
+            if (confirmPasswordInput.type === 'password') {
+                confirmPasswordInput.type = 'text';
+                toggleConfirmIcon.classList.remove('fa-eye');
+                toggleConfirmIcon.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                toggleConfirmIcon.classList.remove('fa-eye-slash');
+                toggleConfirmIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

@@ -1,0 +1,406 @@
+﻿@{
+    string currentPagePath = Context.Request.Path;
+    string loginPagePath = "/Identity/Account/Login";
+    string registerPagePath = "/Identity/Account/Register";
+    bool isLoginPage = currentPagePath.Contains(loginPagePath);
+    bool isRegisterPage = currentPagePath.Contains(registerPagePath);
+
+    ViewData["IsLoginPage"] = isLoginPage;
+    ViewData["IsRegisterPage"] = isRegisterPage;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <!-- Thêm Font Awesome để hiển thị các biểu tượng mạng xã hội -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Beautiful Header CSS -->
+    <link rel="stylesheet" href="~/css/beautiful-header.css" />
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+</head>
+<body class="d-flex flex-column h-100 light-mode">
+    <header class="modern-header">
+        <!-- Main Navigation -->
+        <nav class="navbar navbar-expand-lg main-navbar">
+        <div class="container">
+            @if (!(bool)ViewData["IsLoginPage"] && !(bool)ViewData["IsRegisterPage"])
+            {
+                    <a class="navbar-brand" href="/">
+                        <div class="logo-container">
+                            <img src="~/LayoutAdmin/assets/images/saigon-glisten.jpg" alt="Saigon Glisten" class="logo-img" />
+                            <div class="logo-text">
+                                <span class="logo-main">SAIGON GLISTEN</span>
+                                <span class="logo-sub">Du lịch & Khám phá</span>
+                            </div>
+                        </div>
+                </a>
+            }
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Trang chủ
+                            </a>
+                        </li>
+                        @if (!(bool)ViewData["IsLoginPage"] && !(bool)ViewData["IsRegisterPage"])
+                        {
+                        <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="weatherForecast">
+                                    <i class="fas fa-cloud-sun"></i>Dự báo thời tiết
+                                </a>
+                        </li>
+                        }
+                    </ul>
+                    
+                    <div class="navbar-actions">
+                        
+                           <!-- Language Selector -->
+                           <div class="language-selector">
+                               <button class="language-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                   <i class="fas fa-globe"></i>
+                                   <span>Ngôn ngữ</span>
+                                   <i class="fas fa-chevron-down"></i>
+                               </button>
+                               <ul class="dropdown-menu language-menu">
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('vi'); return false;">
+                                       <img src="https://flagcdn.com/w20/vn.png" alt="Vietnam" class="flag-icon">
+                                       <span>Tiếng Việt</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('en'); return false;">
+                                       <img src="https://flagcdn.com/w20/us.png" alt="United States" class="flag-icon">
+                                       <span>English</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('fr'); return false;">
+                                       <img src="https://flagcdn.com/w20/fr.png" alt="France" class="flag-icon">
+                                       <span>Français</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('de'); return false;">
+                                       <img src="https://flagcdn.com/w20/de.png" alt="Germany" class="flag-icon">
+                                       <span>Deutsch</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('es'); return false;">
+                                       <img src="https://flagcdn.com/w20/es.png" alt="Spain" class="flag-icon">
+                                       <span>Español</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('zh-CN'); return false;">
+                                       <img src="https://flagcdn.com/w20/cn.png" alt="China" class="flag-icon">
+                                       <span>中文</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('ja'); return false;">
+                                       <img src="https://flagcdn.com/w20/jp.png" alt="Japan" class="flag-icon">
+                                       <span>日本語</span>
+                                   </a></li>
+                                   <li><a class="dropdown-item language-item" href="javascript:void(0)" onclick="changeLanguage('ko'); return false;">
+                                       <img src="https://flagcdn.com/w20/kr.png" alt="South Korea" class="flag-icon">
+                                       <span>한국어</span>
+                                   </a></li>
+                               </ul>
+                           </div>
+                           <!-- Hidden Google Translate Element -->
+                           <div id="google_translate_element" style="display: none !important;"></div>
+                        
+                        <!-- Dark Mode Toggle -->
+                        <button id="toggleMode" class="theme-toggle">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        
+                        <!-- Admin Link -->
+                        @if (User.IsInRole("Admin") || User.IsInRole("Company"))
+                        {
+                            <a class="admin-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                <i class="fas fa-cog"></i> Giao diện quản Lý
+                            </a>
+                        }
+                        
+                        <!-- User Dropdown -->
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="user-dropdown">
+                                <button class="user-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <span class="user-name">
+                                        @await Component.InvokeAsync("UserInfo")
+                                    </span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <ul class="dropdown-menu user-menu">
+                                    <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="fas fa-user"></i> Tài khoản</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="ThongBao" asp-action="Index"><i class="fas fa-bell"></i> Thông báo</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="MyFavorites"><i class="fas fa-heart"></i> Danh sách yêu thích</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Booking" asp-action="BookingHistory"><i class="fas fa-history"></i> Lịch sử đặt tour</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="auth-buttons">
+                                <a class="btn-login" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+                                <a class="btn-register" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Google Translate Script -->
+        <script type="text/javascript">
+            function changeLanguage(langCode) {
+                console.log('Changing language to:', langCode);
+                
+                // Ẩn dropdown
+                var dropdown = bootstrap.Dropdown.getInstance(document.querySelector('.language-toggle'));
+                if (dropdown) {
+                    dropdown.hide();
+                }
+                
+                // Tạo URL với hash
+                var currentUrl = window.location.origin + window.location.pathname;
+                var newUrl = currentUrl + '#googtrans(vi|' + langCode + ')';
+                
+                // Thay đổi hash trước
+                window.location.hash = 'googtrans(vi|' + langCode + ')';
+                
+                // Sau đó reload trang
+                setTimeout(function() {
+                    window.location.reload();
+                }, 100);
+            }
+
+            function googleTranslateElementInit() {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'vi',
+                    includedLanguages: 'en,fr,de,es,zh-CN,ja,ko,vi',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                }, 'google_translate_element');
+                
+                console.log('Google Translate initialized');
+                
+                // Ẩn Google Translate widget mặc định
+                setTimeout(function() {
+                    var translateElement = document.querySelector('#google_translate_element');
+                    if (translateElement) {
+                        translateElement.style.display = 'none';
+                    }
+                }, 100);
+            }
+        </script>
+        <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    </header>
+
+    <main class="flex-grow-1 d-flex align-items-center">
+        <div class="container container-custom w-100">
+            @RenderBody()
+        </div>
+    </main>
+
+    <style>
+        #backToTop {
+            display: none;
+            font-size: 18px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            padding: 15px;
+            text-align: center;
+            line-height: 30px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+            #backToTop:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+            }
+    </style>
+    <!-- Nút Back to Top -->
+    <button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4" style="display: none;">
+        <i class="fas fa-arrow-up"></i> <!-- Biểu tượng mũi tên lên -->
+    </button>
+
+
+    <footer class="footer mt-auto py-4 bg-dark text-light">
+        <div class="container">
+            <div class="row justify-content-between align-items-center">
+                <!-- Logo và mô tả -->
+                <div class="col-12 col-md-3 text-center text-md-start mb-3 mb-md-0">
+                    <img src="~/LayoutAdmin/assets/images/saigon-glisten.jpg" alt="Logo" class="mb-3" style="max-width: 120px;">
+                    <p>© 2024 - SAIGON GLISTEN - Nơi đưa bạn đến với những chuyến du lịch thú vị.</p>
+                </div>
+
+                <!-- Liên kết nhanh -->
+                <div class="col-12 col-md-3 text-center mb-3 mb-md-0">
+                    <h5 class="text-uppercase">Liên kết nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Trang chủ</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Dịch vụ</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Về chúng tôi (Mô tả ngắn) -->
+                <div class="col-12 col-md-3 text-center mb-3 mb-md-0">
+                    <h5 class="text-uppercase"><a href="#" class="text-light text-decoration-none">Về chúng tôi</a></h5>
+                    <p>Saigon Glisten là một công ty du lịch hàng đầu tại TP.HCM, đưa du khách khám phá vẻ đẹp của Việt Nam và thế giới.</p>
+                </div>
+
+                <!-- Thông tin liên hệ và mạng xã hội -->
+                <div class="col-12 col-md-3 text-center text-md-end">
+                    <h5 class="text-uppercase">Liên hệ</h5>
+                    <p>Email: info@dulichvietnam.com</p>
+                    <p>Điện thoại: 0123 456 789</p>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.instagram.com/" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="https://x.com/home?lang=vi" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.youtube.com/" class="text-light"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Owl Carousel JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+    
+    <!-- FancyBox JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/LayoutHome/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @RenderSection("Styles", required: false)
+
+
+
+    <script>
+        $(document).ready(function () {
+            // Mặc định chế độ sáng
+            $('body').addClass('light-mode');
+
+            // Nút chuyển đổi chế độ
+            $('#toggleMode').click(function () {
+                $('body').toggleClass('dark-mode light-mode');
+
+                // Cập nhật biểu tượng khi chuyển đổi
+                if ($('body').hasClass('dark-mode')) {
+                    $('#toggleMode').html('<i class="fas fa-sun"></i>');
+                } else {
+                    $('#toggleMode').html('<i class="fas fa-moon"></i>');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // Lấy phần tử nút
+        const backToTopButton = document.getElementById("backToTop");
+
+        // Khi người dùng cuộn xuống 200px, hiển thị nút
+        window.onscroll = function () {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                backToTopButton.style.display = "block";
+            } else {
+                backToTopButton.style.display = "none";
+            }
+        };
+
+        // Khi nhấn vào nút, cuộn về đầu trang
+        backToTopButton.onclick = function () {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        };
+    </script>
+
+
+    <script>
+    document.addEventListener("DOMContentLoaded", (event) => {
+        const microphoneButton = document.getElementById('microphoneButton');
+        const searchInput = document.getElementById('searchInput');
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); // Sử dụng SpeechRecognition cho cả Chrome và các trình duyệt khác
+        recognition.continuous = false; // Dừng nhận diện khi xong
+        recognition.lang = 'vi-VN';
+
+        let isRecognizing = false;
+
+        recognition.onstart = () => {
+            microphoneButton.classList.add('active');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript; // Lấy kết quả đầu tiên
+            searchInput.value = transcript; // Điền vào ô tìm kiếm
+            stopRecognition(); // Dừng nhận diện sau khi nhận xong
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Error occurred: ' + event.error);
+            stopRecognition();
+        };
+
+        recognition.onend = () => {
+            microphoneButton.classList.remove('active');
+            isRecognizing = false; // Đặt trạng thái nhận diện là false
+        };
+
+        microphoneButton.addEventListener('click', () => {
+            if (isRecognizing) {
+                stopRecognition();
+            } else {
+                startRecognition();
+            }
+        });
+
+        function startRecognition() {
+            recognition.start();
+            isRecognizing = true;
+        }
+
+        function stopRecognition() {
+            recognition.stop();
+        }
+    });
+</script>
+
+    <style>
+        /* Light and Dark Mode Styles */
+        body.light-mode {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,31 @@
+﻿@page
+@model LogoutModel
+@{
+    ViewData["Title"] = "Đang đăng xuất...";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Đang đăng xuất...</h2>
+                    <p class="card-text">Vui lòng đợi trong giây lát.</p>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tự động submit form logout khi trang load
+    window.onload = function() {
+        document.getElementById('logoutForm').submit();
+    };
+</script>
+
+<form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post" style="display: none;">
+</form>

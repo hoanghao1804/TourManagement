@@ -1,0 +1,94 @@
+﻿@model WEBSAIGONGLISTEN.Models.Booking
+
+@{
+    ViewData["Title"] = "Xác nhận đặt tour";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-5">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Xác nhận đặt tour</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Tour Information -->
+                    <div class="mb-4">
+                        <h5 class="text-primary">Thông tin tour</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>@Model.Product?.Name</h6>
+                                <p class="text-muted mb-1">Mã đặt tour: #@Model.Id</p>
+                                <p class="text-muted mb-0">Ngày đặt: @Model.BookingDate.ToString("dd/MM/yyyy")</p>
+                            </div>
+                            <div class="col-md-4">
+                                <img src="@(Model.Product?.Images?.FirstOrDefault()?.Url ?? Model.Product?.ImageUrl ?? "/images/default-tour.jpg")" 
+                                     alt="@Model.Product?.Name" class="img-fluid rounded" style="max-height: 100px;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passenger Information -->
+                    <div class="mb-4">
+                        <h5 class="text-primary">Thông tin khách</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center">
+                                    <i class="fas fa-baby text-info fs-4"></i>
+                                    <p class="mb-1"><strong>Trẻ nhỏ (&lt; 2 tuổi)</strong></p>
+                                    <p class="mb-0">@Model.QuantityUnder2 người</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center">
+                                    <i class="fas fa-child text-warning fs-4"></i>
+                                    <p class="mb-1"><strong>Trẻ em (2-10 tuổi)</strong></p>
+                                    <p class="mb-0">@Model.Quantity2To10 người</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 text-center">
+                                    <i class="fas fa-user text-success fs-4"></i>
+                                    <p class="mb-1"><strong>Người lớn (&gt; 10 tuổi)</strong></p>
+                                    <p class="mb-0">@Model.QuantityAbove10 người</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Summary -->
+                    <div class="mb-4">
+                        <h5 class="text-primary">Tổng kết thanh toán</h5>
+                        <hr>
+                        <div class="bg-light p-3 rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Tổng số khách:</strong> @(Model.QuantityUnder2 + Model.Quantity2To10 + Model.QuantityAbove10) người</p>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <h5 class="text-success mb-0">Tổng giá trị: @Model.TotalPrice.ToString("N0") ₫</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="/Booking/BookingHistory" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                        <form asp-action="CompletePayment" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-credit-card me-2"></i>Thanh toán ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

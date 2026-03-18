@@ -1,0 +1,144 @@
+﻿@page
+@model ExternalLoginsModel
+@{
+    ViewData["Title"] = "Đăng nhập bên ngoài";
+    ViewData["ActivePage"] = ManageNavPages.ExternalLogins;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/account-manage.css" />
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Cài đặt tài khoản</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="/Identity/Account/Manage" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                    </a>
+                    <a href="/Identity/Account/Manage/Email" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i>Email
+                    </a>
+                    <a href="/Identity/Account/Manage/ChangePassword" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>Mật khẩu
+                    </a>
+                    <a href="/Identity/Account/Manage/ExternalLogins" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-external-link-alt me-2"></i>Đăng nhập bên ngoài
+                    </a>
+                    <a href="/Identity/Account/Manage/TwoFactorAuthentication" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>Xác thực 2 lớp
+                    </a>
+                    <a href="/Identity/Account/Manage/PersonalData" class="list-group-item list-group-item-action">
+                        <i class="fas fa-download me-2"></i>Tải dữ liệu
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Status Message -->
+            <partial name="_StatusMessage" for="StatusMessage" />
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-external-link-alt me-2"></i>Đăng nhập bên ngoài</h4>
+                    <small class="text-muted">Quản lý các tài khoản đăng nhập liên kết</small>
+                </div>
+                <div class="card-body">
+                    @if (Model.CurrentLogins?.Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5><i class="fas fa-link me-2"></i>Tài khoản đã liên kết</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th><i class="fas fa-globe me-2"></i>Nhà cung cấp</th>
+                                            <th><i class="fas fa-cog me-2"></i>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var login in Model.CurrentLogins)
+                                        {
+                                            <tr>
+                                                <td id="@($"login-provider-{login.LoginProvider}")">
+                                                    <i class="fab fa-@(login.LoginProvider.ToLower()) me-2"></i>
+                                                    @login.ProviderDisplayName
+                                                </td>
+                                                <td>
+                                                    @if (Model.ShowRemoveButton)
+                                                    {
+                                                        <form id="@($"remove-login-{login.LoginProvider}")" asp-page-handler="RemoveLogin" method="post" class="d-inline">
+                                                            <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden" />
+                                                            <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden" />
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                                    title="Gỡ liên kết @login.ProviderDisplayName" 
+                                                                    onclick="return confirm('Bạn có chắc chắn muốn gỡ liên kết tài khoản @login.ProviderDisplayName?')">
+                                                                <i class="fas fa-unlink me-1"></i>Gỡ liên kết
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">Không thể gỡ liên kết</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.OtherLogins?.Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5><i class="fas fa-plus me-2"></i>Thêm tài khoản đăng nhập</h5>
+                            <p class="text-muted">Liên kết tài khoản khác để đăng nhập dễ dàng hơn</p>
+                            
+                            <form id="link-login-form" asp-page-handler="LinkLogin" method="post">
+                                <div class="row">
+                                    @foreach (var provider in Model.OtherLogins)
+                                    {
+                                        <div class="col-md-6 col-lg-4 mb-3">
+                                            <button id="@($"link-login-button-{provider.Name}")" 
+                                                    type="submit" 
+                                                    class="btn btn-outline-primary w-100" 
+                                                    name="provider" 
+                                                    value="@provider.Name" 
+                                                    title="Đăng nhập bằng tài khoản @provider.DisplayName">
+                                                <i class="fab fa-@(provider.Name.ToLower()) me-2"></i>
+                                                @provider.DisplayName
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </form>
+                        </div>
+                    }
+
+                    @if (Model.CurrentLogins?.Count == 0 && Model.OtherLogins?.Count == 0)
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-external-link-alt text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">Chưa có tài khoản đăng nhập bên ngoài</h5>
+                            <p class="text-muted">Hiện tại bạn chỉ có thể đăng nhập bằng email và mật khẩu</p>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="/Identity/Account/Manage" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

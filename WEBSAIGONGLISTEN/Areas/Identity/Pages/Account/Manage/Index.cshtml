@@ -1,0 +1,199 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/account-manage.css" />
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Cài đặt tài khoản</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="/Identity/Account/Manage" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                    </a>
+                    <a href="/Identity/Account/Manage/Email" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i>Email
+                    </a>
+                    <a href="/Identity/Account/Manage/ChangePassword" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>Mật khẩu
+                    </a>
+                    <a href="/Identity/Account/Manage/ExternalLogins" class="list-group-item list-group-item-action">
+                        <i class="fas fa-external-link-alt me-2"></i>Đăng nhập bên ngoài
+                    </a>
+                     <a href="/Identity/Account/Manage/TwoFactorAuthentication" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>Xác thực 2 lớp
+                    </a>
+                    <a href="/Identity/Account/Manage/PersonalData" class="list-group-item list-group-item-action">
+                        <i class="fas fa-download me-2"></i>Tải dữ liệu
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Status Message -->
+            <partial name="_StatusMessage" model="Model.StatusMessage" />
+            
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Thông tin cá nhân</h4>
+                    <small class="text-muted">Cập nhật thông tin profile của bạn</small>
+                </div>
+                <div class="card-body">
+                    <form id="profile-form" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display: none;"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Username" class="form-label">
+                                        <i class="fas fa-envelope me-2 text-primary"></i>Tên đăng nhập
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input asp-for="Username" class="form-control" disabled />
+                                    </div>
+                                    <small class="form-text text-muted">Tên đăng nhập không thể thay đổi</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Input.FullName" class="form-label">
+                                        <i class="fas fa-user me-2 text-primary"></i>Họ và tên
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-id-card text-muted"></i>
+                                        </span>
+                                        <input asp-for="Input.FullName" class="form-control" placeholder="Nhập họ và tên của bạn" />
+                                    </div>
+                                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                                    <small class="form-text text-muted">Tên đầy đủ của bạn</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Input.PhoneNumber" class="form-label">
+                                        <i class="fas fa-phone me-2 text-primary"></i>Số điện thoại
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-phone text-muted"></i>
+                                        </span>
+                                        <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn" />
+                                    </div>
+                                    <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                                    <small class="form-text text-muted">Nhập số điện thoại để nhận thông báo về tour</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Input.Age" class="form-label">
+                                        <i class="fas fa-birthday-cake me-2 text-primary"></i>Tuổi
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-calendar text-muted"></i>
+                                        </span>
+                                        <input asp-for="Input.Age" class="form-control" placeholder="Nhập tuổi của bạn" />
+                                    </div>
+                                    <span asp-validation-for="Input.Age" class="text-danger"></span>
+                                    <small class="form-text text-muted">Tuổi của bạn</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Input.Address" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2 text-primary"></i>Địa chỉ
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-home text-muted"></i>
+                                        </span>
+                                        <textarea asp-for="Input.Address" class="form-control" placeholder="Nhập địa chỉ của bạn" rows="3"></textarea>
+                                    </div>
+                                    <span asp-validation-for="Input.Address" class="text-danger"></span>
+                                    <small class="form-text text-muted">Địa chỉ nơi ở hiện tại</small>
+                                </div>
+                                
+                                <div class="profile-security">
+                                    <h6><i class="fas fa-shield-alt me-2"></i>Trạng thái bảo mật</h6>
+                                    <div class="security-status">
+                                        <div class="status-item">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            <span>Tài khoản được bảo mật</span>
+                                        </div>
+                                        <div class="status-item">
+                                            <i class="fas fa-envelope text-info"></i>
+                                            <span>Email đã xác thực</span>
+                                        </div>
+                                        <div class="status-item">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                                            <span>Số điện thoại chưa xác thực</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-4">
+                            <button id="update-profile-button" type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <a href="/Identity/Account/Manage/Email" class="btn btn-outline-secondary">
+                                <i class="fas fa-envelope me-2"></i>Quản lý Email
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-key text-primary mb-3" style="font-size: 2rem;"></i>
+                            <h6>Đổi mật khẩu</h6>
+                            <p class="text-muted">Bảo mật tài khoản của bạn</p>
+                            <a href="/Identity/Account/Manage/ChangePassword" class="btn btn-outline-primary">Thay đổi</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt text-success mb-3" style="font-size: 2rem;"></i>
+                            <h6>Xác thực 2 lớp</h6>
+                            <p class="text-muted">Tăng cường bảo mật</p>
+                            <a href="/Identity/Account/Manage/EnableAuthenticator" class="btn btn-outline-success">Bật</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Show validation summary if it has content
+        $(document).ready(function() {
+            var validationSummary = $('.alert.alert-danger');
+            if (validationSummary.text().trim() !== '') {
+                validationSummary.show();
+            }
+        });
+    </script>
+}

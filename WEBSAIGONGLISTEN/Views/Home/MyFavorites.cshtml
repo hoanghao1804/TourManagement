@@ -1,0 +1,331 @@
+@model IEnumerable<WEBSAIGONGLISTEN.Models.Product>
+@{
+    ViewData["Title"] = "Danh sách yêu thích";
+}
+
+<!-- Thêm thư viện Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+<style>
+    .favorites-hero {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        padding: 60px 0;
+        text-align: center;
+        color: white;
+    }
+    
+    .favorites-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    
+    .favorites-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+    
+    .favorites-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .favorites-count {
+        font-size: 1.2rem;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .favorites-count i {
+        color: #3498db;
+        margin-right: 10px;
+    }
+    
+    .empty-favorites {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .empty-favorites i {
+        font-size: 5rem;
+        color: #95a5a6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-favorites h3 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .empty-favorites p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    .btn-explore {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 15px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-explore:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        color: white;
+    }
+    
+    .product-card {
+        border: none;
+        border-radius: 25px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        backdrop-filter: blur(10px);
+        position: relative;
+        height: 100%;
+    }
+    
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2c3e50, #3498db);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 2;
+    }
+    
+    .product-card:hover::before {
+        opacity: 1;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+    }
+    
+    .product-image-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    .product-image {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+        filter: brightness(0.9) saturate(1.1);
+    }
+    
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+        filter: brightness(1) saturate(1.2);
+    }
+    
+    .delete-btn-overlay {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid #e74c3c;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .delete-btn-overlay i {
+        color: #e74c3c;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .delete-btn-overlay:hover {
+        background: #e74c3c;
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+    
+    .delete-btn-overlay:hover i {
+        color: white;
+    }
+    
+    .product-info {
+        padding: 30px;
+    }
+    
+    .product-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+    
+    .product-meta {
+        color: #6c757d;
+        margin-bottom: 25px;
+        font-size: 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.5;
+        display: flex;
+        align-items: center;
+    }
+    
+    .product-meta i {
+        color: #3498db;
+        margin-right: 8px;
+    }
+    
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e74c3c;
+        margin-bottom: 20px;
+    }
+    
+    .btn-view-detail {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 25px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-view-detail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        color: white;
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="favorites-hero">
+    <div class="container">
+        <h1><i class="fas fa-heart me-3"></i>Danh sách yêu thích của tôi</h1>
+        <p>Quản lý các tour du lịch bạn đã lưu</p>
+    </div>
+</div>
+
+<!-- Favorites Container -->
+<div class="favorites-container">
+    @if (Model != null && Model.Any())
+    {
+        <div class="favorites-header">
+            <div class="favorites-count">
+                <i class="fas fa-heart"></i>
+                Bạn có @Model.Count() tour trong danh sách yêu thích
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="@item.ImageUrl" alt="@item.Name" class="product-image" onerror="this.src='/images/default-tour.jpg'">
+                            <button onclick="removeFavorite(@item.Id)" class="delete-btn-overlay" title="Xóa khỏi yêu thích">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h5 class="product-title">@item.Name</h5>
+                            
+                            <div class="product-meta">
+                                <i class="fas fa-clock"></i>
+                                @item.DaysNightsDescription
+                            </div>
+                            
+                            <div class="product-price">
+                                Từ @item.PriceAbove10.ToString("N0") ₫
+                            </div>
+                            
+                            <a asp-action="Display" asp-route-productId="@item.Id" class="btn-view-detail">
+                                <i class="fas fa-eye me-2"></i>Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-favorites">
+            <i class="fas fa-heart-broken"></i>
+            <h3>Danh sách yêu thích trống</h3>
+            <p>Bạn chưa có tour nào trong danh sách yêu thích. Hãy khám phá và thêm các tour yêu thích của bạn!</p>
+            <a asp-action="Index" class="btn-explore">
+                <i class="fas fa-compass me-2"></i>Khám phá tours
+            </a>
+        </div>
+    }
+</div>
+
+<script>
+    async function removeFavorite(productId) {
+        if (!confirm('Bạn có chắc muốn xóa tour này khỏi danh sách yêu thích?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('@Url.Action("RemoveFromFavorites", "Home")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}`
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                location.reload(); // Reload để cập nhật danh sách
+            } else {
+                alert(result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        }
+    }
+</script>

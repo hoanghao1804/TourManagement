@@ -1,0 +1,15 @@
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.exe
+*.dll
+
+appsettings.Development.json
+secrets.json
+
+node_modules/
+dist/

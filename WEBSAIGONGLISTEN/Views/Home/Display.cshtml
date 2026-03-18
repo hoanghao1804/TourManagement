@@ -1,0 +1,443 @@
+﻿@model WEBSAIGONGLISTEN.Models.ProductDisplayViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết gói du lịch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Thêm Font Awesome và Google Fonts -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Leaflet.js CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Display CSS -->
+<link rel="stylesheet" href="~/css/display.css" />
+
+<!-- Hero Section -->
+<div class="display-hero">
+    <div class="display-hero-content">
+        <h1><i class="fas fa-map-marked-alt me-3"></i>Chi tiết gói du lịch</h1>
+        <p>Khám phá trải nghiệm tuyệt vời đang chờ đón bạn</p>
+    </div>
+</div>
+
+<div class="display-container">
+    @* Hiển thị thông báo lỗi *@
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row">
+        <!-- Cột trái: Ảnh + Điểm nhấn + Lịch trình -->
+        <div class="col-lg-8 mb-4">
+            <!-- Hình ảnh sản phẩm -->
+            @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+            {
+                <div class="product-image-section">
+                    <img src="@Model.Product.ImageUrl" alt="Hình ảnh sản phẩm" class="main-product-image" />
+                    <div class="image-overlay">
+                        <div class="product-title-overlay">@Model.Product.Name</div>
+                        <div class="product-subtitle">@Model.Product.DaysNightsDescription</div>
+                    </div>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <button id="favoriteBtn" class="btn-favorite-image" onclick="toggleFavorite(@Model.Product.Id)">
+                            <i class="fas fa-heart" id="heartIcon"></i>
+                        </button>
+                    }
+                </div>
+            }
+
+            <!-- Điểm nhấn hành trình -->
+            <div class="trip-highlights">
+                <div class="highlights-header">
+                    <h3><i class="fas fa-star"></i>Điểm nhấn hành trình</h3>
+                </div>
+                <div class="highlights-content">
+                    <div class="highlight-item">
+                        <strong>Hành trình:</strong>
+                        <span>@Model.Product.DaysNightsDescription</span>
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Lịch trình:</strong>
+                        <span>@Model.Product.DaysNightsDescription</span>
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Khởi hành:</strong>
+                        <span>@Model.Product.StartDate.ToString("dd/MM/yyyy") - @Model.Product.EndDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Di chuyển:</strong>
+                        <span>Xe du lịch đời mới & Máy bay khứ hồi</span>
+                    </div>
+                    <div class="highlight-description">
+                        <p>@Model.Product.Description</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Maps hiển thị vị trí -->
+            @if (Model.Product.Latitude.HasValue && Model.Product.Longitude.HasValue)
+            {
+                <div class="location-map-section">
+                    <div class="location-header">
+                        <h3><i class="fas fa-map-marker-alt"></i>Vị trí địa điểm</h3>
+                    </div>
+                    <div class="location-info mb-3">
+                        @if (!string.IsNullOrEmpty(Model.Product.Address))
+                        {
+                            <p><i class="fas fa-map-pin"></i> <strong>Địa chỉ:</strong> @Model.Product.Address</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Product.City))
+                        {
+                            <p><i class="fas fa-city"></i> <strong>Thành phố:</strong> @Model.Product.City</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Product.Province))
+                        {
+                            <p><i class="fas fa-globe"></i> <strong>Tỉnh/Thành:</strong> @Model.Product.Province</p>
+                        }
+                    </div>
+                    <div id="map" style="height: 400px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
+                </div>
+            }
+
+            <!-- Lịch trình các ngày tour -->
+            <div class="tour-days">
+                <div class="tour-days-header">
+                    <h3><i class="fas fa-calendar-day"></i>Lịch trình tour</h3>
+                </div>
+                <div class="tour-days-content">
+                    <!-- Chi tiết các ngày tour -->
+                    @if (Model.TourDays != null && Model.TourDays.Any())
+                    {
+                        <div class="days-section">
+                            <h4 class="days-title">Chi tiết từng ngày</h4>
+                            @foreach (var day in Model.TourDays)
+                            {
+                                <div class="day-item">
+                                    <div class="day-header">
+                                        <div class="day-number">
+                                            <i class="fas fa-calendar-alt" style="margin-right: 10px;"></i>
+                                             Ngày @day.DayNumber
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(day.ImageUrl))
+                                        {
+                                            <img src="@day.ImageUrl" alt="Hình ảnh ngày @day.DayNumber" class="day-image" />
+                                        }
+                                    </div>
+                                    <button class="btn-description show-description" data-day="@day.DayNumber">
+                                        <i class="fas fa-eye me-1"></i>Xem mô tả
+                                    </button>
+                                    <div class="day-description description" id="description-@day.DayNumber" style="display: none;">
+                                        <p>@day.Description</p>
+                                    </div>
+                                </div>
+                            }
+                            <button id="toggleAll" class="btn-toggle-all">
+                                <i class="fas fa-list me-2"></i>Xem tất cả mô tả
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times" style="font-size: 3rem; color: #6c757d; margin-bottom: 20px;"></i>
+                            <p style="color: #6c757d; font-size: 1.1rem;">Không có thông tin về các ngày tour.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Thông tin booking (cuộn theo) -->
+        <div class="col-lg-4 mb-4">
+            <!-- Container 1: Thông tin tour -->
+            <div class="tour-info-container">
+                <div class="tour-info-header">
+                    <h2>@Model.Product.Name</h2>
+                    <div class="tour-duration">@Model.Product.DaysNightsDescription</div>
+                </div>
+                
+                <div class="tour-info-content">
+                    <div class="info-row">
+                        <span class="label">Mã tour:</span>
+                        <span class="value">@Model.Product.Id</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Thời gian:</span>
+                        <span class="value">@Model.Product.DaysNightsDescription</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Khởi hành:</span>
+                        <span class="value">@Model.Product.StartDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Kết thúc:</span>
+                        <span class="value">@Model.Product.EndDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Còn lại:</span>
+                        <span class="value availability">@Model.Product.Quantity chỗ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container 2: Thông tin giá và booking -->
+            <div class="booking-container">
+
+                <!-- Pricing Section -->
+                <div class="pricing-section">
+                    <h3 class="pricing-title">Chọn số lượng khách</h3>
+                    
+                    <div class="passenger-section">
+                            <div class="passenger-item">
+                                <div class="passenger-label">
+                                    <span class="passenger-type">Người lớn</span>
+                                    <span class="passenger-age">(> 10 tuổi)</span>
+                                </div>
+                                <div class="passenger-price-row">
+                                    <div class="passenger-price">@Model.Product.PriceAbove10.ToString("N0") ₫</div>
+                                    <div class="passenger-controls">
+                                        <button class="control-btn decrement" data-target="above10">-</button>
+                                        <input type="number" id="above10" class="passenger-input" value="0" min="0" readonly />
+                                        <button class="control-btn increment" data-target="above10">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <div class="passenger-item">
+                            <div class="passenger-label">
+                                <span class="passenger-type">Trẻ em</span>
+                                <span class="passenger-age">(2 - 10 tuổi)</span>
+                            </div>
+                            <div class="passenger-price-row">
+                                <div class="passenger-price">@Model.Product.Price2To10.ToString("N0") ₫</div>
+                                <div class="passenger-controls">
+                                    <button class="control-btn decrement" data-target="2to10">-</button>
+                                    <input type="number" id="2to10" class="passenger-input" value="0" min="0" readonly />
+                                    <button class="control-btn increment" data-target="2to10">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="passenger-item">
+                            <div class="passenger-label">
+                                <span class="passenger-type">Trẻ nhỏ</span>
+                                <span class="passenger-age">(< 2 tuổi)</span>
+                            </div>
+                            <div class="passenger-price-row">
+                                <div class="passenger-price">@Model.Product.PriceUnder2.ToString("N0") ₫</div>
+                                <div class="passenger-controls">
+                                    <button class="control-btn decrement" data-target="under2">-</button>
+                                    <input type="number" id="under2" class="passenger-input" value="0" min="0" readonly />
+                                    <button class="control-btn increment" data-target="under2">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Price -->
+                    <div class="total-price-section">
+                        <div class="total-price">
+                            <span class="total-label">Tổng giá tour:</span>
+                            <span class="total-amount" id="totalAmount">0 ₫</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="booking-actions">
+                        <form id="bookTourForm" asp-controller="Booking" asp-action="BookTour" method="post">
+                            <input type="hidden" name="ProductId" value="@Model.Product.Id" />
+                            <input type="hidden" name="UserId" value="@Model.UserID" />
+                            <input type="hidden" id="quantityUnder2" name="quantityUnder2" value="0" />
+                            <input type="hidden" id="quantity2To10" name="quantity2To10" value="0" />
+                            <input type="hidden" id="quantityAbove10" name="quantityAbove10" value="0" />
+                            
+                            <button type="submit" id="bookTour" class="btn-book-now" disabled>
+                                <i class="fas fa-shopping-cart me-2"></i>Đặt tour ngay
+                            </button>
+                        </form>
+                        
+                        <form id="frmCreateOrder" asp-action="Pay" asp-controller="Booking" method="post">
+                            <input type="hidden" name="ProductId" value="@Model.Product.Id" />
+                            <input type="hidden" name="UserId" value="@Model.UserID" />
+                            <input type="hidden" name="QuantityUnder2" id="quantityUnder2Payment" value="0" />
+                            <input type="hidden" name="Quantity2To10" id="quantity2To10Payment" value="0" />
+                            <input type="hidden" name="QuantityAbove10" id="quantityAbove10Payment" value="0" />
+                            
+                            <button type="submit" class="btn-payment-momo" id="paymentButton" disabled>
+                                <i class="fas fa-credit-card me-2"></i>Thanh toán Momo
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+<!-- Nút quay lại -->
+<div class="text-center mt-2 mb-4">
+    <a asp-action="Index" class="btn-back">
+        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+    </a>
+</div>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+<script>
+    function updateTotal() {
+        // Lấy giá từ server-side values
+        const under2Price  = @((int)Model.Product.PriceUnder2);
+        const twoTo10Price = @((int)Model.Product.Price2To10);
+        const above10Price = @((int)Model.Product.PriceAbove10);
+
+
+        const under2Qty = parseInt(document.getElementById('under2').value) || 0;
+        const twoTo10Qty = parseInt(document.getElementById('2to10').value) || 0;
+        const above10Qty = parseInt(document.getElementById('above10').value) || 0;
+
+        const totalAmount = (under2Price * under2Qty) + (twoTo10Price * twoTo10Qty) + (above10Price * above10Qty);
+        document.getElementById('totalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' ₫';
+
+        // Cập nhật số lượng trong các trường input ẩn
+        document.getElementById('quantityUnder2').value = under2Qty;
+        document.getElementById('quantity2To10').value = twoTo10Qty;
+        document.getElementById('quantityAbove10').value = above10Qty;
+
+        // Cập nhật số lượng trong form thanh toán Momo
+        document.getElementById('quantityUnder2Payment').value = under2Qty;
+        document.getElementById('quantity2To10Payment').value = twoTo10Qty;
+        document.getElementById('quantityAbove10Payment').value = above10Qty;
+
+        // Kích hoạt nút "Đặt tour" và "Thanh toán"
+        document.getElementById('bookTour').disabled = totalAmount <= 0;
+        document.getElementById('paymentButton').disabled = totalAmount <= 0;
+    }
+
+    document.querySelectorAll('.increment').forEach(button => {
+        button.addEventListener('click', function () {
+            const target = document.getElementById(button.getAttribute('data-target'));
+            target.value = parseInt(target.value) + 1;
+            updateTotal();
+        });
+    });
+
+    document.querySelectorAll('.decrement').forEach(button => {
+        button.addEventListener('click', function () {
+            const target = document.getElementById(button.getAttribute('data-target'));
+            if (parseInt(target.value) > 0) {
+                target.value = parseInt(target.value) - 1;
+                updateTotal();
+            }
+        });
+    });
+
+
+    updateTotal();
+
+    // Mở rộng/collapse mô tả các ngày tour
+    document.querySelectorAll('.show-description').forEach(button => {
+        button.addEventListener('click', function () {
+            const dayNumber = button.getAttribute('data-day');
+            const description = document.getElementById(`description-${dayNumber}`);
+            description.style.display = description.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+
+    // Toggle all descriptions
+    document.getElementById('toggleAll').addEventListener('click', function () {
+        document.querySelectorAll('.description').forEach(desc => {
+            desc.style.display = 'block';
+        });
+    });
+
+    // Initialize favorite button state
+    @if (User.Identity.IsAuthenticated)
+    {
+        var isFavorite = ViewBag.IsFavorite != null ? (bool)ViewBag.IsFavorite : false;
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            var favoriteBtn = document.getElementById('favoriteBtn');
+            var isFavorited = @(isFavorite ? "true" : "false");
+            
+            if (isFavorited) {
+                favoriteBtn.classList.add('favorited');
+            }
+        });
+        </text>
+    }
+
+    // Toggle favorite function
+    async function toggleFavorite(productId) {
+        var favoriteBtn = document.getElementById('favoriteBtn');
+        var heartIcon = document.getElementById('heartIcon');
+        var isFavorited = favoriteBtn.classList.contains('favorited');
+        
+        try {
+            let url;
+            if (isFavorited) {
+                url = '@Url.Action("RemoveFromFavorites", "Home")';
+            } else {
+                url = '@Url.Action("AddToFavorites", "Home")';
+            }
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}`
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Toggle favorite state
+                favoriteBtn.classList.toggle('favorited');
+                
+                // Show success message
+                alert(result.message);
+            } else {
+                alert(result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        }
+    }
+
+    // Leaflet.js hiển thị vị trí (OpenStreetMap - Miễn phí!)
+    @if (Model.Product.Latitude.HasValue && Model.Product.Longitude.HasValue)
+    {
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            var location = [@Model.Product.Latitude.Value, @Model.Product.Longitude.Value];
+            
+            var map = L.map('map').setView(location, 15);
+            
+            // Thêm tile layer từ OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            var marker = L.marker(location).addTo(map);
+            marker.bindPopup('@Model.Product.Name').openPopup();
+        });
+        </text>
+    }
+</script>
+
+<!-- Load Leaflet.js -->
+@if (Model.Product.Latitude.HasValue && Model.Product.Longitude.HasValue)
+{
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+}

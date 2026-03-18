@@ -1,0 +1,463 @@
+﻿@* @model WEBSAIGONGLISTEN.Models.Product
+@{
+    ViewData["Title"] = "Hiển thị gói du lịch";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<h2>@ViewData["Title"]</h2>
+<h2>@Model.Name</h2>
+<div>
+<h3>Price: @Model.Price</h3>
+<p>@Model.Description</p>
+@if (!string.IsNullOrEmpty(Model.ImageUrl))
+{
+<img src="@Model.ImageUrl" alt="Product Image" style="max-width:
+200px;"/>
+}
+</div>
+<a asp-action="Index">Back to List</a>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@model WEBSAIGONGLISTEN.Models.Product
+@{
+    ViewData["Title"] = "Hiển thị gói du lịch";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+<h2 class="text-center">@ViewData["Title"]</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card bg-light shadow mb-4">
+                <div class="card-header">
+                    <h3 class="text-primary">Thông tin cơ bản</h3>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title">1. Tên: @Model.Name</h4>
+                    <h4 class="card-title">2. Giá: @Model.Price</h4>
+                    <!-- 3. Hình ảnh -->
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div>
+                            <h4 class="card-title">3. Hình ảnh:</h4>
+                            <img src="@Model.ImageUrl" alt="Hình ảnh sản phẩm" class="img-fluid rounded" style="max-width: 200px;" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light shadow mb-4">
+                <div class="card-header">
+                    <h3 class="text-primary">Thông tin chi tiết</h3>
+                </div>
+                <div class="card-body">
+                   
+                </div>
+            </div>
+</div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-primary btn-block mt-3">Quay lại danh sách</a>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+} *@
+@model WEBSAIGONGLISTEN.Models.ProductDisplayViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết tour du lịch";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<style>
+    .product-detail-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .product-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .product-body {
+        padding: 2rem;
+        background: #f8f9fa;
+    }
+    
+    .info-section {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-value {
+        color: #212529;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .price-badge {
+        background: linear-gradient(45deg, #27ae60, #2ecc71);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 0.2rem;
+    }
+    
+    .category-badge {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .date-badge {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .image-container {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .product-image {
+        max-width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+    
+    .product-image:hover {
+        transform: scale(1.02);
+    }
+    
+    .tour-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .tour-table thead {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+    }
+    
+    .tour-table th {
+        border: none;
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .tour-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f2f6;
+        vertical-align: top;
+    }
+    
+    .tour-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .action-buttons {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+    
+    .btn-custom {
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back {
+        background: linear-gradient(45deg, #6c757d, #495057);
+        border: none;
+        color: white;
+    }
+    
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card product-detail-card">
+                <!-- Header -->
+                <div class="product-header">
+                    <h1 class="mb-0">
+                        <i class="fas fa-map-marked-alt me-3"></i>
+                        Chi Tiết Tour Du Lịch
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">Thông tin chi tiết về gói tour</p>
+                </div>
+                
+                <!-- Body -->
+                <div class="product-body">
+                    <div class="row d-flex">
+                        <!-- Hình ảnh tour -->
+                        <div class="col-md-6 d-flex">
+                            <div class="info-section flex-fill">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-image me-2 text-primary"></i>
+                                    Hình Ảnh Tour
+                                </h5>
+                                
+                                <div class="image-container">
+                                    @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                                    {
+                                        <img src="@Model.Product.ImageUrl" 
+                                             alt="@Model.Product.Name" 
+                                             class="product-image"
+                                             onerror="this.src='https://via.placeholder.com/600x400?text=Không+có+hình+ảnh'">
+                                    }
+                                    else
+                                    {
+                                        <div class="product-image d-flex align-items-center justify-content-center bg-light border rounded">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-image fa-3x mb-2"></i>
+                                                <p class="mb-0">Không có hình ảnh</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Thông tin cơ bản -->
+                        <div class="col-md-6 d-flex">
+                            <div class="info-section flex-fill">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                                    Thông Tin Cơ Bản
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-ticket-alt me-1"></i>
+                                        Tên Tour
+                                    </div>
+                                    <div class="info-value">
+                                        <strong>@Model.Product.Name</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        Khu Vực
+                                    </div>
+                                    <div class="info-value">
+                                        <span class="category-badge">
+                                            <i class="fas fa-tag me-1"></i>
+                                            @Model.Product.Category.Name
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-users me-1"></i>
+                                        Số Lượng
+                                    </div>
+                                    <div class="info-value">
+                                        <span class="badge bg-info fs-6">@Model.Product.Quantity người</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        Thời Gian
+                                    </div>
+                                    <div class="info-value">
+                                        <span class="date-badge me-2">
+                                            <i class="fas fa-play me-1"></i>
+                                            @Model.Product.StartDate.ToString("dd/MM/yyyy")
+                                        </span>
+                                        <span class="date-badge">
+                                            <i class="fas fa-stop me-1"></i>
+                                            @Model.Product.EndDate.ToString("dd/MM/yyyy")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        </div>
+                    
+                    <!-- Mô tả tour -->
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-12">
+                            <div class="info-section">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-align-left me-2 text-primary"></i>
+                                    Mô Tả Tour
+                                </h5>
+                                <div class="info-value" style="line-height: 1.6;">
+                                    @if (!string.IsNullOrEmpty(Model.Product.Description))
+                                    {
+                                        @Model.Product.Description
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Chưa có mô tả chi tiết
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+        </div>
+    </div>
+
+                    <!-- Bảng giá -->
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-12">
+                            <div class="info-section">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-dollar-sign me-2 text-primary"></i>
+                                    Bảng Giá Tour
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="price-badge">
+                                                <i class="fas fa-baby me-1"></i>
+                                                Trẻ dưới 2 tuổi
+                                            </div>
+                                            <div class="mt-2">
+                                                <strong class="text-success fs-4">@Model.Product.PriceUnder2.ToString("C")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="price-badge">
+                                                <i class="fas fa-child me-1"></i>
+                                                Trẻ 2-10 tuổi
+                                            </div>
+                                            <div class="mt-2">
+                                                <strong class="text-success fs-4">@Model.Product.Price2To10.ToString("C")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3">
+                                            <div class="price-badge">
+                                                <i class="fas fa-user me-1"></i>
+                                                Người trên 10 tuổi
+                                            </div>
+                                            <div class="mt-2">
+                                                <strong class="text-success fs-4">@Model.Product.PriceAbove10.ToString("C")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lịch trình tour -->
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-12">
+                            <div class="info-section">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-calendar-check me-2 text-primary"></i>
+                                    Lịch Trình Tour
+                                </h5>
+                                <div class="tour-table">
+                                    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                                                <th style="width: 20%;">
+                                                    <i class="fas fa-calendar-day me-1"></i>
+                                                    Ngày
+                                                </th>
+                                                <th style="width: 80%;">
+                                                    <i class="fas fa-list-ul me-1"></i>
+                                                    Hoạt Động
+                                                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tourDay in Model.TourDays)
+            {
+                                                <tr>
+                                                    <td>
+                                                        <span class="date-badge">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            @Model.Product.StartDate.AddDays(tourDay.DayNumber - 1).ToString("dd/MM/yyyy")
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div style="line-height: 1.6;">
+                                                            @tourDay.Description
+                                                        </div>
+                                                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+</div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="@Url.Action("Index", "Product", new { area = "Admin" })" class="btn btn-back btn-custom">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Quay Lại Danh Sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
