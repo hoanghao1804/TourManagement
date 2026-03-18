@@ -88,11 +88,3 @@ Người dùng có thể kiểm tra lịch sử giao dịch của mình để th
 - **.NET 8** 
 - **SQL Server 2019+**
 
-### Các Bước Cài Đặt
-
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/TranNguyenVu74123/WebsiteDatTourDuLich.git
-=======
-# TourManagement
->>>>>>> 9ac04524ef039f7ca7967336184fd7b6718d47b6
